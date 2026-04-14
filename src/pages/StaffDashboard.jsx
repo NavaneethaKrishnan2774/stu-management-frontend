@@ -148,6 +148,84 @@ export default function StaffDashboard() {
     );
   };
 
+  const parseFeedbackResponseText = (responseText) => {
+    if (!responseText) return null;
+    if (typeof responseText !== "string") return responseText;
+    try {
+      return JSON.parse(responseText);
+    } catch {
+      return null;
+    }
+  };
+
+  const feedbackCriteriaKeysByType = {
+    semester: [
+      "communication",
+      "explanation",
+      "knowledge",
+      "engagement",
+      "doubt_clarification",
+      "syllabus_coverage",
+      "practical_examples",
+      "industry_relevance",
+      "skill_development",
+      "teaching_pace",
+      "teaching_aids",
+      "overall_effectiveness",
+    ],
+    event: [
+      "organization",
+      "time_management",
+      "content_quality",
+      "speaker_performance",
+      "audience_engagement",
+      "venue_arrangement",
+      "technical_support",
+      "overall_experience",
+    ],
+    course: [
+      "course_material",
+      "assignments",
+      "support",
+      "difficulty",
+      "clarity",
+    ],
+    faculty: [
+      "communication",
+      "teaching_clarity",
+      "subject_knowledge",
+      "student_interaction",
+      "doubt_handling",
+      "punctuality",
+      "fairness",
+      "approachability",
+      "class_control",
+      "guidance",
+      "overall_performance",
+    ],
+    general: [
+      "bus_availability",
+      "timing_punctuality",
+      "travel_comfort",
+      "room_cleanliness",
+      "water_electricity",
+      "security",
+      "food_quality",
+      "food_variety",
+      "pricing",
+      "washroom_cleanliness",
+      "maintenance_response",
+      "classroom_cleanliness",
+      "infrastructure_quality",
+      "campus_maintenance",
+      "overall_satisfaction",
+      "suggestions",
+    ],
+  };
+
+  const getCriteriaKeysByType = (formType) =>
+    feedbackCriteriaKeysByType[formType] || feedbackCriteriaKeysByType.semester;
+
   const fetchFacultyOptions = async () => {
     try {
       const res = await fetch("http://127.0.0.1:8000/api/students/available-faculties/", {
@@ -967,61 +1045,56 @@ export default function StaffDashboard() {
       </section>
 
       <section style={{ marginBottom: "24px" }}>
-        <h2>Feedback Response Summary</h2>
+        <h2>Student Comments Dashboard</h2>
         {loadingFeedbackResults ? (
           <p>Loading feedback results...</p>
         ) : !Array.isArray(feedbackResults) || feedbackResults.length === 0 ? (
           <p>No feedback responses have been submitted yet.</p>
         ) : (() => {
-          const responseRows = feedbackResults.flatMap((form, formIndex) => {
+          const commentRows = feedbackResults.flatMap((form, formIndex) => {
             const responses = Array.isArray(form.responses) ? form.responses : [];
-            const formKey = form.id ?? `feedback-form-${formIndex}`;
-            return responses.map((response, responseIndex) => ({
-              key: `${formKey}-response-${responseIndex}`,
-              formTitle: form.title || `Feedback ${formIndex + 1}`,
-              formType: form.form_type || "semester",
-              semester: form.semester || "-",
-              department: form.department || "-",
-              year: form.year || "-",
-              section: form.section || "-",
-              student: response.student || "Unknown",
-              responseText: response.response || response.response_text || "-",
-              total_responses: form.total_responses ?? responses.length,
-            }));
+            const formKey = form.form_id ?? form.id ?? `feedback-form-${formIndex}`;
+            return responses
+              .map((response, responseIndex) => {
+                const parsed = parseFeedbackResponseText(response.response || response.response_text);
+                const comment = parsed?.comments || "";
+                if (!comment || comment.toString().trim() === "") return null;
+                return {
+                  key: `${formKey}-comment-${responseIndex}`,
+                  formTitle: form.title || `Feedback ${formIndex + 1}`,
+                  formType: form.form_type || "semester",
+                  student: response.student || "Unknown",
+                  comment: comment.toString(),
+                  submittedAt: parsed?.submitted_at || "",
+                };
+              })
+              .filter(Boolean);
           });
 
-          if (responseRows.length === 0) {
-            return <p>No feedback responses have been submitted yet.</p>;
+          if (commentRows.length === 0) {
+            return <p>No student comments yet.</p>;
           }
 
           return (
-            <div style={{ overflowX: 'auto' }}>
-              <table border="1" style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <div style={{ overflowX: "auto" }}>
+              <table border="1" style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
-                  <tr style={{ backgroundColor: '#f2f2f2' }}>
-                    <th style={{ padding: '10px' }}>Feedback Form</th>
-                    <th style={{ padding: '10px' }}>Type</th>
-                    <th style={{ padding: '10px' }}>Semester</th>
-                    <th style={{ padding: '10px' }}>Department</th>
-                    <th style={{ padding: '10px' }}>Year</th>
-                    <th style={{ padding: '10px' }}>Section</th>
-                    <th style={{ padding: '10px' }}>Student</th>
-                    <th style={{ padding: '10px' }}>Response</th>
-                    <th style={{ padding: '10px' }}>Total Responses</th>
+                  <tr style={{ backgroundColor: "#f2f2f2" }}>
+                    <th style={{ padding: "10px" }}>Feedback Form</th>
+                    <th style={{ padding: "10px" }}>Type</th>
+                    <th style={{ padding: "10px" }}>Student</th>
+                    <th style={{ padding: "10px" }}>Comment</th>
+                    <th style={{ padding: "10px" }}>Submitted At</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {responseRows.map((row) => (
+                  {commentRows.map((row) => (
                     <tr key={row.key}>
-                      <td style={{ padding: '10px' }}>{row.formTitle}</td>
-                      <td style={{ padding: '10px' }}>{row.formType === 'event' ? 'Event' : row.formType === 'faculty' ? 'Faculty' : row.formType === 'general' ? 'General' : 'Semester'}</td>
-                      <td style={{ padding: '10px', textAlign: 'center' }}>{row.semester}</td>
-                      <td style={{ padding: '10px', textAlign: 'center' }}>{row.department}</td>
-                      <td style={{ padding: '10px', textAlign: 'center' }}>{row.year}</td>
-                      <td style={{ padding: '10px', textAlign: 'center' }}>{row.section}</td>
-                      <td style={{ padding: '10px' }}>{row.student}</td>
-                      <td style={{ padding: '10px' }}>{row.responseText}</td>
-                      <td style={{ padding: '10px', textAlign: 'center' }}>{row.total_responses}</td>
+                      <td style={{ padding: "10px" }}>{row.formTitle}</td>
+                      <td style={{ padding: "10px" }}>{row.formType === "event" ? "Event" : row.formType === "faculty" ? "Faculty" : row.formType === "general" ? "General" : "Semester"}</td>
+                      <td style={{ padding: "10px" }}>{row.student}</td>
+                      <td style={{ padding: "10px" }}>{row.comment}</td>
+                      <td style={{ padding: "10px" }}>{row.submittedAt ? new Date(row.submittedAt).toLocaleString() : "-"}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1029,6 +1102,139 @@ export default function StaffDashboard() {
             </div>
           );
         })()}
+      </section>
+
+      <section style={{ marginBottom: "24px" }}>
+        <h2>Feedback Response Summary</h2>
+        {loadingFeedbackResults ? (
+          <p>Loading feedback results...</p>
+        ) : !Array.isArray(feedbackResults) || feedbackResults.length === 0 ? (
+          <p>No feedback responses have been submitted yet.</p>
+        ) : (
+          feedbackResults.map((form, formIndex) => {
+            const formType = form.form_type || "semester";
+            const criteriaKeys = getCriteriaKeysByType(formType).filter((key) => key !== "suggestions");
+            const formKey = form.form_id ?? form.id ?? `feedback-form-${formIndex}`;
+            const responses = Array.isArray(form.responses) ? form.responses : [];
+
+            const grouped = {};
+            const addRow = (groupKey, row) => {
+              if (!grouped[groupKey]) {
+                grouped[groupKey] = { ...row, count: 0, sums: {} };
+              }
+              grouped[groupKey].count += 1;
+              criteriaKeys.forEach((key) => {
+                const value = Number(row.ratings?.[key]);
+                if (!Number.isNaN(value)) {
+                  grouped[groupKey].sums[key] = (grouped[groupKey].sums[key] || 0) + value;
+                }
+              });
+            };
+
+            responses.forEach((response) => {
+              const parsed = parseFeedbackResponseText(response.response || response.response_text);
+              if (!parsed) return;
+
+              if (formType === "faculty") {
+                addRow(
+                  form.faculty_username || parsed.target_faculty || "Unknown",
+                  {
+                    key: `${formKey}-faculty`,
+                    label: form.faculty_username || parsed.target_faculty || "Unknown",
+                    ratings: parsed.ratings || {},
+                  }
+                );
+                return;
+              }
+
+              if (Array.isArray(parsed.subject_staff_ratings) && parsed.subject_staff_ratings.length > 0) {
+                parsed.subject_staff_ratings.forEach((subjectRating) => {
+                  const label = `${subjectRating.subject || subjectRating.subject_code || "Subject"}`;
+                  addRow(
+                    `${label}-${subjectRating.faculty_username || "Unknown"}`,
+                    {
+                      key: `${formKey}-${label}-${subjectRating.faculty_username || "Unknown"}`,
+                      label,
+                      faculty: subjectRating.faculty_username || "",
+                      ratings: subjectRating.ratings || {},
+                    }
+                  );
+                });
+                return;
+              }
+
+              if (parsed.ratings && typeof parsed.ratings === "object") {
+                addRow(
+                  formType === "semester" || formType === "course"
+                    ? form.subject || parsed.topic || `Form ${formIndex + 1}`
+                    : form.title || parsed.topic || `Form ${formIndex + 1}`,
+                  {
+                    key: `${formKey}-overall`,
+                    label: formType === "semester" || formType === "course" ? form.subject || parsed.topic || "Subject" : form.title || parsed.topic || "Form",
+                    faculty: formType === "faculty" ? form.faculty_username || parsed.target_faculty || "" : parsed.target_faculty || form.faculty_username || "",
+                    ratings: parsed.ratings || {},
+                  }
+                );
+                return;
+              }
+            });
+
+            const summaryRows = Object.values(grouped).map((entry) => ({
+              ...entry,
+              averageRatings: criteriaKeys.reduce((acc, key) => {
+                acc[key] = entry.count > 0 && entry.sums[key] !== undefined ? Number((entry.sums[key] / entry.count).toFixed(1)) : "-";
+                return acc;
+              }, {}),
+            }));
+
+            if (summaryRows.length === 0) {
+              return (
+                <div key={formKey} style={{ border: "1px solid #ccc", padding: "12px", marginBottom: "16px" }}>
+                  <strong>{form.title}</strong>
+                  <p style={{ margin: "6px 0" }}>No aggregated feedback available.</p>
+                </div>
+              );
+            }
+
+            return (
+              <div key={formKey} style={{ border: "1px solid #ccc", padding: "12px", marginBottom: "16px" }}>
+                <strong>{form.title}</strong>
+                <p style={{ margin: "6px 0" }}>
+                  Type: {formType === "event" ? "Event" : formType === "faculty" ? "Faculty" : formType === "general" ? "General" : "Semester"} Feedback
+                  {form.semester ? ` • Semester ${form.semester}` : ""}
+                  {form.department && form.department !== "all" ? ` • ${form.department}` : ""}
+                  {form.year && form.year !== "all" ? ` • Year ${form.year}` : ""}
+                  {form.section && form.section !== "all" ? ` • Section ${form.section}` : ""}
+                </p>
+                <p style={{ margin: "6px 0" }}>Responses: {form.total_responses ?? responses.length}</p>
+                <div style={{ overflowX: "auto" }}>
+                  <table border="1" style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <thead>
+                      <tr style={{ backgroundColor: "#f2f2f2" }}>
+                        <th style={{ padding: "10px" }}>{formType === "faculty" ? "Staff" : formType === "semester" || formType === "course" ? "Subject" : "Feedback"}</th>
+                        {formType !== "faculty" && <th style={{ padding: "10px" }}>Faculty</th>}
+                        {criteriaKeys.map((key) => (
+                          <th key={key} style={{ padding: "10px" }}>{getCriterionLabel(key)}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {summaryRows.map((row) => (
+                        <tr key={row.key}>
+                          <td style={{ padding: "10px" }}>{row.label}</td>
+                          {formType !== "faculty" && <td style={{ padding: "10px" }}>{row.faculty || "-"}</td>}
+                          {criteriaKeys.map((key) => (
+                            <td key={key} style={{ padding: "10px", textAlign: "center" }}>{row.averageRatings[key]}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            );
+          })
+        )}
       </section>
 
       <section style={{ marginBottom: "24px" }}>
