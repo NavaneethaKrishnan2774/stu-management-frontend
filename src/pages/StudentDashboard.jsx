@@ -27,42 +27,81 @@ export default function StudentDashboard() {
 
   const feedbackCriteriaByType = {
     semester: [
-      { key: "communication", label: "Teacher’s communication skills" },
-      { key: "explanation", label: "Explanation of subject matter" },
-      { key: "engagement", label: "Ability to engage the class" },
-      { key: "availability", label: "Availability for student questions" },
-      { key: "technology", label: "Use of technology in teaching" },
-      { key: "respect", label: "Respect and fairness" },
-      { key: "timeliness", label: "Timeliness of feedback" },
-      { key: "environment", label: "Classroom environment" },
+      { key: "communication", label: "Teacher Communication Skill (clear and understandable)" },
+      { key: "explanation", label: "Explanation of Subject Matter (concept clarity level)" },
+      { key: "knowledge", label: "Subject Knowledge (depth of knowledge)" },
+      { key: "engagement", label: "Ability to Engage Class (keeps class active)" },
+      { key: "doubt_clarification", label: "Doubt Clarification (resolves student queries)" },
+      { key: "syllabus_coverage", label: "Syllabus Coverage (portion completed properly)" },
+      { key: "practical_examples", label: "Practical Examples (real-world explanations)" },
+      { key: "industry_relevance", label: "Industry Relevance (aligned with industry needs)" },
+      { key: "skill_development", label: "Skill Development (improves practical skills)" },
+      { key: "teaching_pace", label: "Teaching Pace (speed of teaching)" },
+      { key: "teaching_aids", label: "Use of Teaching Aids (PPT, tools usage)" },
+      { key: "overall_effectiveness", label: "Overall Teaching Effectiveness (overall performance rating)" },
     ],
     event: [
-      { key: "content", label: "Quality of event content" },
-      { key: "organization", label: "Event organization and logistics" },
-      { key: "communication", label: "Communication before the event" },
-      { key: "engagement", label: "Event engagement and participation" },
-      { key: "facilities", label: "Venue and facilities" },
+      { key: "organization", label: "Event Organization (planning and structure)" },
+      { key: "time_management", label: "Time Management (on-time execution)" },
+      { key: "content_quality", label: "Content Quality (useful information provided)" },
+      { key: "speaker_performance", label: "Speaker Performance (delivery and clarity)" },
+      { key: "audience_engagement", label: "Audience Engagement (interaction with participants)" },
+      { key: "venue_arrangement", label: "Venue Arrangement (seating and setup)" },
+      { key: "technical_support", label: "Technical Support (audio, visuals working)" },
+      { key: "overall_experience", label: "Overall Experience (general satisfaction level)" },
     ],
     course: [
-      { key: "course_material", label: "Course material quality" },
-      { key: "assignments", label: "Assignments and assessment" },
-      { key: "support", label: "Instructor support" },
-      { key: "difficulty", label: "Course difficulty level" },
-      { key: "clarity", label: "Clarity of course objectives" },
+      { key: "course_material", label: "Course Material Quality" },
+      { key: "assignments", label: "Assignments and Assessment" },
+      { key: "support", label: "Instructor Support" },
+      { key: "difficulty", label: "Course Difficulty Level" },
+      { key: "clarity", label: "Clarity of Course Objectives" },
     ],
     faculty: [
-      { key: "knowledge", label: "Faculty knowledge of subject" },
-      { key: "communication", label: "Communication and explanation" },
-      { key: "approachability", label: "Approachability and support" },
-      { key: "fairness", label: "Fairness in evaluation" },
-      { key: "presence", label: "Classroom presence and discipline" },
+      { key: "communication", label: "Communication Skill (clarity in speech)" },
+      { key: "teaching_clarity", label: "Teaching Clarity (easy to understand)" },
+      { key: "subject_knowledge", label: "Subject Knowledge (strong concept understanding)" },
+      { key: "student_interaction", label: "Student Interaction (engages with students)" },
+      { key: "doubt_handling", label: "Doubt Handling (answers questions clearly)" },
+      { key: "punctuality", label: "Punctuality (comes on time)" },
+      { key: "fairness", label: "Fairness (equal treatment to all)" },
+      { key: "approachability", label: "Approachability (easy to approach)" },
+      { key: "class_control", label: "Class Control (manages discipline)" },
+      { key: "guidance", label: "Guidance & Mentorship (supports student growth)" },
+      { key: "overall_performance", label: "Overall Performance (overall teaching quality)" },
     ],
     general: [
-      { key: "usefulness", label: "Usefulness of the feedback opportunity" },
-      { key: "clarity", label: "Clarity of the feedback form" },
-      { key: "relevance", label: "Relevance of the questions" },
-      { key: "experience", label: "Overall experience" },
+      { section: "Transport" },
+      { key: "bus_availability", label: "Bus Availability (sufficient transport access)" },
+      { key: "timing_punctuality", label: "Timing Punctuality (on-time arrival/departure)" },
+      { key: "travel_comfort", label: "Travel Comfort (seating and crowd level)" },
+      { section: "Hostel" },
+      { key: "room_cleanliness", label: "Room Cleanliness (hygiene of rooms)" },
+      { key: "water_electricity", label: "Water & Electricity (basic facilities availability)" },
+      { key: "security", label: "Security (safety measures provided)" },
+      { section: "Food / Canteen" },
+      { key: "food_quality", label: "Food Quality (taste and hygiene)" },
+      { key: "food_variety", label: "Food Variety (menu diversity)" },
+      { key: "pricing", label: "Pricing (affordable cost level)" },
+      { section: "Maintenance" },
+      { key: "washroom_cleanliness", label: "Washroom Cleanliness (clean and usable)" },
+      { key: "maintenance_response", label: "Maintenance Response (quick issue fixing)" },
+      { section: "Classroom & Campus" },
+      { key: "classroom_cleanliness", label: "Classroom Cleanliness (neat learning space)" },
+      { key: "infrastructure_quality", label: "Infrastructure Quality (benches, boards condition)" },
+      { key: "campus_maintenance", label: "Overall Campus Maintenance (general upkeep)" },
+      { section: "Final" },
+      { key: "overall_satisfaction", label: "Overall Satisfaction (overall experience level)" },
+      { key: "suggestions", label: "Suggestions (improvement ideas)", type: "textarea" },
     ],
+  };
+
+  const formTypeLabels = {
+    semester: "Semester",
+    event: "Event",
+    faculty: "Faculty",
+    general: "General",
+    course: "Course",
   };
 
   const getUniqueNotifications = (notifs) => {
@@ -214,7 +253,7 @@ export default function StudentDashboard() {
 
   const selectedFormType = selectedFeedbackForm?.form_type || "semester";
   const currentFeedbackCriteria = feedbackCriteriaByType[selectedFormType] || feedbackCriteriaByType.semester;
-  const isSubjectFeedback = selectedFormType === "semester";
+  const isSubjectForm = selectedFormType === "semester" || selectedFormType === "faculty";
 
   const handleSubmitFeedback = async () => {
     if (!selectedFeedbackForm) {
@@ -222,12 +261,12 @@ export default function StudentDashboard() {
       return;
     }
 
-    if (isSubjectFeedback && semesterSubjects.length === 0) {
+    if (isSubjectForm && semesterSubjects.length === 0) {
       alert("No subjects are available for this semester.");
       return;
     }
 
-    if (isSubjectFeedback) {
+    if (isSubjectForm) {
       const missingStaff = semesterSubjects.some((subject) => {
         const subjectKey = subject.subject_code || subject.subject;
         return !subjectStaffSelections[subjectKey];
@@ -238,7 +277,7 @@ export default function StudentDashboard() {
       }
     }
 
-    const missingRating = isSubjectFeedback
+    const missingRating = isSubjectForm
       ? semesterSubjects.some((subject) => {
           const subjectKey = subject.subject_code || subject.subject;
           return currentFeedbackCriteria.some((criterion) => {
@@ -263,7 +302,7 @@ export default function StudentDashboard() {
       submitted_at: new Date().toISOString(),
     };
 
-    if (isSubjectFeedback) {
+    if (isSubjectForm) {
       const subjectRatings = semesterSubjects.map((subject) => {
         const subjectKey = subject.subject_code || subject.subject;
         const ratings = {};
@@ -518,7 +557,7 @@ export default function StudentDashboard() {
                 <div style={{ marginBottom: "16px" }}>
                   <strong>Active Form:</strong> {selectedFeedbackForm.title} <br />
                   <small>
-                    {selectedFeedbackForm.form_type === "event" ? "Event" : selectedFeedbackForm.form_type === "course" ? "Course" : selectedFeedbackForm.form_type === "faculty" ? "Faculty" : selectedFeedbackForm.form_type === "general" ? "General" : "Semester"} Feedback
+                    {formTypeLabels[selectedFormType] || "Semester"} Feedback
                     {selectedFeedbackForm.subject ? ` — ${selectedFeedbackForm.subject}` : ""}
                     {selectedFeedbackForm.subject_code ? ` (${selectedFeedbackForm.subject_code})` : ""}
                     {selectedFeedbackForm.available_until ? ` — available until ${new Date(selectedFeedbackForm.available_until).toLocaleString()}` : ''}
@@ -535,7 +574,7 @@ export default function StudentDashboard() {
                   </div>
                 )}
 
-                {selectedFormType === "semester" ? (
+                {isSubjectForm ? (
                   <div style={{ overflowX: "auto", marginBottom: "20px" }}>
                     <table
                       border="1"
@@ -612,22 +651,52 @@ export default function StudentDashboard() {
                         </tr>
                       </thead>
                       <tbody>
-                        {currentFeedbackCriteria.map((criterion) => (
-                          <tr key={criterion.key}>
-                            <td style={{ textAlign: "left", padding: "10px" }}>{criterion.label}</td>
-                            <td style={{ textAlign: "center", padding: "10px" }}>
-                              <input
-                                type="number"
-                                min="1"
-                                max="5"
-                                value={feedbackRatings[criterion.key] || ""}
-                                onChange={(e) => handleRatingChange(null, criterion.key, e.target.value)}
-                                style={{ width: "80px", textAlign: "center" }}
-                                placeholder="1-5"
-                              />
-                            </td>
-                          </tr>
-                        ))}
+                        {currentFeedbackCriteria.map((criterion) => {
+                          if (criterion.section) {
+                            return (
+                              <tr key={`section-${criterion.section}`}>
+                                <td
+                                  colSpan="2"
+                                  style={{
+                                    textAlign: "left",
+                                    padding: "10px",
+                                    background: "#eef2ff",
+                                    fontWeight: 700,
+                                  }}
+                                >
+                                  {criterion.section}
+                                </td>
+                              </tr>
+                            );
+                          }
+
+                          return (
+                            <tr key={criterion.key}>
+                              <td style={{ textAlign: "left", padding: "10px" }}>{criterion.label}</td>
+                              <td style={{ textAlign: "center", padding: "10px" }}>
+                                {criterion.type === "textarea" ? (
+                                  <textarea
+                                    rows={3}
+                                    value={feedbackRatings[criterion.key] || ""}
+                                    onChange={(e) => handleRatingChange(null, criterion.key, e.target.value)}
+                                    style={{ width: "100%" }}
+                                    placeholder="Write your suggestion"
+                                  />
+                                ) : (
+                                  <input
+                                    type="number"
+                                    min="1"
+                                    max="5"
+                                    value={feedbackRatings[criterion.key] || ""}
+                                    onChange={(e) => handleRatingChange(null, criterion.key, e.target.value)}
+                                    style={{ width: "80px", textAlign: "center" }}
+                                    placeholder="1-5"
+                                  />
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>

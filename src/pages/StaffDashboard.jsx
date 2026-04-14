@@ -14,6 +14,8 @@ export default function StaffDashboard() {
   const [file, setFile] = useState(null);
 
   const [feedbackForms, setFeedbackForms] = useState([]);
+  const [feedbackResults, setFeedbackResults] = useState([]);
+  const [loadingFeedbackResults, setLoadingFeedbackResults] = useState(false);
   const [facultyOptions, setFacultyOptions] = useState([]);
   const [feedbackDescription, setFeedbackDescription] = useState("");
   const [feedbackDepartment, setFeedbackDepartment] = useState("");
@@ -87,6 +89,65 @@ export default function StaffDashboard() {
   const filterActiveNotifications = (notifications) =>
     notifications.filter(isNotificationActive);
 
+  const feedbackCriteriaLabels = {
+    communication: "Communication Skill",
+    explanation: "Explanation of Subject Matter",
+    knowledge: "Subject Knowledge",
+    engagement: "Ability to Engage Class",
+    doubt_clarification: "Doubt Clarification",
+    syllabus_coverage: "Syllabus Coverage",
+    practical_examples: "Practical Examples",
+    industry_relevance: "Industry Relevance",
+    skill_development: "Skill Development",
+    teaching_pace: "Teaching Pace",
+    teaching_aids: "Use of Teaching Aids",
+    overall_effectiveness: "Overall Teaching Effectiveness",
+    organization: "Event Organization",
+    time_management: "Time Management",
+    content_quality: "Content Quality",
+    speaker_performance: "Speaker Performance",
+    audience_engagement: "Audience Engagement",
+    venue_arrangement: "Venue Arrangement",
+    technical_support: "Technical Support",
+    overall_experience: "Overall Experience",
+    teaching_clarity: "Teaching Clarity",
+    subject_knowledge: "Subject Knowledge",
+    student_interaction: "Student Interaction",
+    doubt_handling: "Doubt Handling",
+    punctuality: "Punctuality",
+    fairness: "Fairness",
+    approachability: "Approachability",
+    class_control: "Class Control",
+    guidance: "Guidance & Mentorship",
+    overall_performance: "Overall Performance",
+    bus_availability: "Bus Availability",
+    timing_punctuality: "Timing Punctuality",
+    travel_comfort: "Travel Comfort",
+    room_cleanliness: "Room Cleanliness",
+    water_electricity: "Water & Electricity",
+    security: "Security",
+    food_quality: "Food Quality",
+    food_variety: "Food Variety",
+    pricing: "Pricing",
+    washroom_cleanliness: "Washroom Cleanliness",
+    maintenance_response: "Maintenance Response",
+    classroom_cleanliness: "Classroom Cleanliness",
+    infrastructure_quality: "Infrastructure Quality",
+    campus_maintenance: "Overall Campus Maintenance",
+    overall_satisfaction: "Overall Satisfaction",
+    suggestions: "Suggestions",
+  };
+
+  const getCriterionLabel = (key) => {
+    if (!key) return "Unknown";
+    return (
+      feedbackCriteriaLabels[key] ||
+      key
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (match) => match.toUpperCase())
+    );
+  };
+
   const fetchFacultyOptions = async () => {
     try {
       const res = await fetch("http://127.0.0.1:8000/api/students/available-faculties/", {
@@ -100,6 +161,26 @@ export default function StaffDashboard() {
       setFacultyOptions(uniqueFaculty);
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const fetchFeedbackResults = async () => {
+    setLoadingFeedbackResults(true);
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/students/feedback-results/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        setFeedbackResults([]);
+        return;
+      }
+      const data = await res.json();
+      setFeedbackResults(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error(err);
+      setFeedbackResults([]);
+    } finally {
+      setLoadingFeedbackResults(false);
     }
   };
 
@@ -414,6 +495,7 @@ export default function StaffDashboard() {
     fetchSubmissions();
     fetchNotifications();
     fetchFeedbackForms();
+    fetchFeedbackResults();
     fetchFacultyOptions();
     fetchTimetables();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -882,6 +964,71 @@ export default function StaffDashboard() {
         </div>
          
         <button onClick={handleCreateFeedbackForm}>Create Feedback Form</button>
+      </section>
+
+      <section style={{ marginBottom: "24px" }}>
+        <h2>Feedback Response Summary</h2>
+        {loadingFeedbackResults ? (
+          <p>Loading feedback results...</p>
+        ) : !Array.isArray(feedbackResults) || feedbackResults.length === 0 ? (
+          <p>No feedback responses have been submitted yet.</p>
+        ) : (() => {
+          const responseRows = feedbackResults.flatMap((form, formIndex) => {
+            const responses = Array.isArray(form.responses) ? form.responses : [];
+            const formKey = form.id ?? `feedback-form-${formIndex}`;
+            return responses.map((response, responseIndex) => ({
+              key: `${formKey}-response-${responseIndex}`,
+              formTitle: form.title || `Feedback ${formIndex + 1}`,
+              formType: form.form_type || "semester",
+              semester: form.semester || "-",
+              department: form.department || "-",
+              year: form.year || "-",
+              section: form.section || "-",
+              student: response.student || "Unknown",
+              responseText: response.response || response.response_text || "-",
+              total_responses: form.total_responses ?? responses.length,
+            }));
+          });
+
+          if (responseRows.length === 0) {
+            return <p>No feedback responses have been submitted yet.</p>;
+          }
+
+          return (
+            <div style={{ overflowX: 'auto' }}>
+              <table border="1" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#f2f2f2' }}>
+                    <th style={{ padding: '10px' }}>Feedback Form</th>
+                    <th style={{ padding: '10px' }}>Type</th>
+                    <th style={{ padding: '10px' }}>Semester</th>
+                    <th style={{ padding: '10px' }}>Department</th>
+                    <th style={{ padding: '10px' }}>Year</th>
+                    <th style={{ padding: '10px' }}>Section</th>
+                    <th style={{ padding: '10px' }}>Student</th>
+                    <th style={{ padding: '10px' }}>Response</th>
+                    <th style={{ padding: '10px' }}>Total Responses</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {responseRows.map((row) => (
+                    <tr key={row.key}>
+                      <td style={{ padding: '10px' }}>{row.formTitle}</td>
+                      <td style={{ padding: '10px' }}>{row.formType === 'event' ? 'Event' : row.formType === 'faculty' ? 'Faculty' : row.formType === 'general' ? 'General' : 'Semester'}</td>
+                      <td style={{ padding: '10px', textAlign: 'center' }}>{row.semester}</td>
+                      <td style={{ padding: '10px', textAlign: 'center' }}>{row.department}</td>
+                      <td style={{ padding: '10px', textAlign: 'center' }}>{row.year}</td>
+                      <td style={{ padding: '10px', textAlign: 'center' }}>{row.section}</td>
+                      <td style={{ padding: '10px' }}>{row.student}</td>
+                      <td style={{ padding: '10px' }}>{row.responseText}</td>
+                      <td style={{ padding: '10px', textAlign: 'center' }}>{row.total_responses}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+        })()}
       </section>
 
       <section style={{ marginBottom: "24px" }}>
