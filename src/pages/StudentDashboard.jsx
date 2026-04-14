@@ -388,13 +388,22 @@ export default function StudentDashboard() {
       setSelectedFeedbackFormId("");
       return;
     }
+
+    // Clear selection when the semester changes so the new form list can reset correctly.
+    setSelectedFeedbackFormId("");
     fetchFeedbackForms();
     fetchSemesterSubjects();
     fetchFacultyOptions();
   }, [selectedSemester, fetchFeedbackForms, fetchSemesterSubjects, fetchFacultyOptions]);
 
   useEffect(() => {
-    if (feedbackForms.length > 0 && !selectedFeedbackFormId) {
+    if (feedbackForms.length === 0) {
+      setSelectedFeedbackFormId("");
+      return;
+    }
+
+    const currentId = parseInt(selectedFeedbackFormId, 10);
+    if (!selectedFeedbackFormId || !feedbackForms.some((form) => form.id === currentId)) {
       setSelectedFeedbackFormId(feedbackForms[0].id);
     }
   }, [feedbackForms, selectedFeedbackFormId]);

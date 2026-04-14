@@ -253,12 +253,42 @@ export default function StaffDashboard() {
         return;
       }
       const data = await res.json();
-      setFeedbackResults(Array.isArray(data) ? data : []);
+      const uniqueFeedbackResults = Array.isArray(data)
+        ? Array.from(
+            new Map(
+              data.map((form, index) => [form.form_id ?? form.id ?? index, form])
+            ).values()
+          )
+        : [];
+      setFeedbackResults(uniqueFeedbackResults);
     } catch (err) {
       console.error(err);
       setFeedbackResults([]);
     } finally {
       setLoadingFeedbackResults(false);
+    }
+  };
+
+  const handleDeleteFeedbackSummary = async (formId) => {
+    if (!window.confirm("Delete all feedback responses for this form? This cannot be undone.")) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/api/students/delete-feedback-summary/${formId}/`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Failed to delete feedback summary");
+        return;
+      }
+      alert(data.message || "Feedback summary deleted.");
+      fetchFeedbackResults();
+    } catch (err) {
+      console.error(err);
+      alert("Unable to delete feedback summary.");
     }
   };
 
@@ -578,6 +608,10 @@ export default function StaffDashboard() {
     fetchTimetables();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const feedbackSummaryForms = feedbackResults.filter(
+    (form) => Array.isArray(form.responses) && form.responses.length > 0
+  );
 
   const handleChange = (id, field, value) => {
     setSubmissions((prev) =>
@@ -1108,10 +1142,10 @@ export default function StaffDashboard() {
         <h2>Feedback Response Summary</h2>
         {loadingFeedbackResults ? (
           <p>Loading feedback results...</p>
-        ) : !Array.isArray(feedbackResults) || feedbackResults.length === 0 ? (
-          <p>No feedback responses have been submitted yet.</p>
+        ) : !Array.isArray(feedbackSummaryForms) || feedbackSummaryForms.length === 0 ? (
+          <p>No aggregated feedback available yet.</p>
         ) : (
-          feedbackResults.map((form, formIndex) => {
+          feedbackSummaryForms.map((form, formIndex) => {
             const formType = form.form_type || "semester";
             const criteriaKeys = getCriteriaKeysByType(formType).filter((key) => key !== "suggestions");
             const formKey = form.form_id ?? form.id ?? `feedback-form-${formIndex}`;
@@ -1198,7 +1232,22 @@ export default function StaffDashboard() {
 
             return (
               <div key={formKey} style={{ border: "1px solid #ccc", padding: "12px", marginBottom: "16px" }}>
-                <strong>{form.title}</strong>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <strong>{form.title}</strong>
+                  <button
+                    onClick={() => handleDeleteFeedbackSummary(form.form_id ?? form.id)}
+                    style={{
+                      padding: "6px 12px",
+                      backgroundColor: "#f44336",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Delete Summary
+                  </button>
+                </div>
                 <p style={{ margin: "6px 0" }}>
                   Type: {formType === "event" ? "Event" : formType === "faculty" ? "Faculty" : formType === "general" ? "General" : "Semester"} Feedback
                   {form.semester ? ` • Semester ${form.semester}` : ""}
