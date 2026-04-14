@@ -9,28 +9,33 @@ function Login() {
 
   const handleLogin = async () => {
     try {
-      const res = await API.post("login/", {
-        username,
-        password
+      // ✅ FIXED ENDPOINT HERE
+      const res = await API.post("api/login/", {
+        username: username,
+        password: password,
       });
 
-      console.log(res.data);
+      console.log("LOGIN RESPONSE:", res);
 
-      // ✅ Extract everything from backend
-      const { access, role, department, year, section } = res.data;
+      const { access, role, department, year, section } = res;
 
-      // ✅ Store in localStorage
+      if (!access) {
+        alert("Invalid login");
+        return;
+      }
+
       localStorage.setItem("token", access);
+      localStorage.setItem("role", role);
       localStorage.setItem("department", department);
       localStorage.setItem("year", year);
       localStorage.setItem("section", section);
 
-      // ✅ Redirect based on role
       if (role === "student") navigate("/student/dashboard");
       else if (role === "staff") navigate("/staff/dashboard");
       else if (role === "admin") navigate("/admin/dashboard");
 
     } catch (err) {
+      console.error(err);
       alert("Invalid login");
     }
   };

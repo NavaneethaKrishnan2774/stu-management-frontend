@@ -24,6 +24,7 @@ function App() {
         <Route path="/student/dashboard" element={<StudentDashboard />} />
         <Route path="/staff/dashboard" element={<StaffDashboard />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/staff" element={<StaffDashboard />} />
 
         {/* ✅ ADD MODULE ROUTES HERE */}
         <Route path="/academics" element={<Academic />} />

@@ -1,10 +1,29 @@
-import axios from "axios";
+const BASE_URL = "http://127.0.0.1:8000/";
 
-const API = axios.create({
-  baseURL: "http://127.0.0.1:8000/api/",
-  headers: {
-    "Content-Type": "application/json"
-  }
-});
+const API = {
+  post: async (endpoint, body) => {
+    const res = await fetch(`${BASE_URL}${endpoint}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    const data = await res.json();
+    return data;
+  },
+
+  get: async (endpoint, token) => {
+    const res = await fetch(`${BASE_URL}${endpoint}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await res.json();
+    return data;
+  },
+};
 
 export default API;

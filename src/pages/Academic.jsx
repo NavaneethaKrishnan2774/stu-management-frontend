@@ -1,35 +1,52 @@
 import { useEffect, useState } from "react";
-import API from "../services/api";
 
 export default function Academic() {
   const [attendance, setAttendance] = useState([]);
-  const [timetable, setTimetable] = useState([]);
   const [assignments, setAssignments] = useState([]);
-  const [selectedDay, setSelectedDay] = useState("Monday");
+  const [submissions, setSubmissions] = useState([]);
+  const [selectedSemester, setSelectedSemester] = useState("");
+  const [timetableEntries, setTimetableEntries] = useState([]);
 
+  const token = localStorage.getItem("token");
   const department = localStorage.getItem("department");
   const year = localStorage.getItem("year");
   const section = localStorage.getItem("section");
 
+  const BASE_URL = "http://127.0.0.1:8000";
+
+  const handleUnauthorized = () => {
+    alert("Session expired. Please login again.");
+    localStorage.clear();
+    window.location.href = "/login";
+  };
+
   useEffect(() => {
+    if (!token) return handleUnauthorized();
+
     fetchAttendance();
-    fetchTimetable();
     fetchAssignments();
+    fetchSubmissions();
   }, []);
+
+  useEffect(() => {
+    fetchTimetable();
+  }, [selectedSemester]);
+
+  // ------------------ FETCH ------------------
 
   const fetchAttendance = async () => {
     try {
-      const res = await API.get("students/attendance/");
-      setAttendance(res.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+      const res = await fetch(
+        `${BASE_URL}/api/students/attendance/`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-  const fetchTimetable = async () => {
-    try {
-      const res = await API.get("students/timetable/");
-      setTimetable(res.data);
+      if (res.status === 401) return handleUnauthorized();
+
+      const data = await res.json();
+      if (Array.isArray(data)) setAttendance(data);
     } catch (err) {
       console.error(err);
     }
@@ -37,28 +54,106 @@ export default function Academic() {
 
   const fetchAssignments = async () => {
     try {
-      const res = await API.get("students/assignments/");
-      setAssignments(res.data);
+      const res = await fetch(
+        `${BASE_URL}/api/students/assignments/`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (res.status === 401) return handleUnauthorized();
+
+      const data = await res.json();
+      if (Array.isArray(data)) setAssignments(data);
     } catch (err) {
       console.error(err);
     }
   };
 
-  const handleSubmit = async (assignmentId, file) => {
-    if (!file) return;
+  const fetchSubmissions = async () => {
+    try {
+      const res = await fetch(
+        `${BASE_URL}/api/students/my-submissions/`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-    const formData = new FormData();
-    formData.append("assignment", assignmentId);
-    formData.append("student", 1); // temporary
-    formData.append("file", file);
+      if (res.status === 401) return handleUnauthorized();
+
+      const data = await res.json();
+      if (Array.isArray(data)) setSubmissions(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchTimetable = async () => {
+    if (!selectedSemester) {
+      setTimetableEntries([]);
+      return;
+    }
 
     try {
-      await API.post("students/submit/", formData);
-      alert("Submitted successfully");
+      const params = new URLSearchParams();
+      if (department) params.set("department", department);
+      if (year) params.set("year", year);
+      if (section) params.set("section", section);
+      params.set("semester", selectedSemester);
+
+      const res = await fetch(
+        `${BASE_URL}/api/students/timetable/${params.toString() ? `?${params.toString()}` : ""}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (res.status === 401) return handleUnauthorized();
+      if (!res.ok) return;
+
+      const data = await res.json();
+      const entries = Array.isArray(data) ? data : [];
+      const filteredEntries = entries.filter(
+        (entry) =>
+          entry.department === department &&
+          entry.year === year &&
+          entry.section === section &&
+          String(entry.semester) === String(selectedSemester)
+      );
+      setTimetableEntries(filteredEntries);
     } catch (err) {
       console.error(err);
     }
   };
+
+  // ------------------ UPLOAD ------------------
+
+  const handleUpload = async (assignmentId, file) => {
+    const formData = new FormData();
+    formData.append("assignment_id", assignmentId);
+    formData.append("file", file);
+
+    const res = await fetch(
+      `${BASE_URL}/api/students/submit/`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      }
+    );
+
+    if (res.status === 401) return handleUnauthorized();
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert(data.error);
+      return;
+    }
+
+    alert("Submitted successfully");
+    fetchSubmissions();
+  };
+
+  // ------------------ ATTENDANCE ------------------
 
   const calculateStats = () => {
     let present = 0;
@@ -75,15 +170,32 @@ export default function Academic() {
     return { present, absent, total, percentage };
   };
 
+  const timetableDayHeaders = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+
+  const timetableRows = [
+    { key: "P1", label: "Period 1", time: "9:00 AM - 9:50 AM", isBreak: false },
+    { key: "P2", label: "Period 2", time: "9:50 AM - 10:40 AM", isBreak: false },
+    { key: "BR1", label: "BREAK", time: "10:40 AM - 10:55 AM", isBreak: true },
+    { key: "P3", label: "Period 3", time: "10:55 AM - 11:45 AM", isBreak: false },
+    { key: "P4", label: "Period 4", time: "11:45 AM - 12:35 PM", isBreak: false },
+    { key: "LN", label: "LUNCH", time: "12:35 PM - 1:25 PM", isBreak: true },
+    { key: "P5", label: "Period 5", time: "1:25 PM - 2:15 PM", isBreak: false },
+    { key: "P6", label: "Period 6", time: "2:15 PM - 3:05 PM", isBreak: false },
+    { key: "BR2", label: "BREAK", time: "3:05 PM - 3:20 PM", isBreak: true },
+    { key: "P7", label: "Period 7", time: "3:20 PM - 4:10 PM", isBreak: false },
+    { key: "P8", label: "Period 8", time: "4:10 PM - 5:00 PM", isBreak: false },
+  ];
+
   const stats = calculateStats();
 
-  const filteredTimetable = timetable.filter(
-    (t) =>
-      t.day === selectedDay &&
-      t.department === department &&
-      t.year === year &&
-      t.section === section
-  );
+  // ------------------ FILTER ------------------
 
   const filteredAssignments = assignments.filter(
     (a) =>
@@ -91,6 +203,10 @@ export default function Academic() {
       a.year === year &&
       a.section === section
   );
+
+  const submittedIds = submissions.map((s) => s.assignment_id);
+
+  // ------------------ UI ------------------
 
   return (
     <div>
@@ -101,6 +217,7 @@ export default function Academic() {
       <p>Year: {year}</p>
       <p>Section: {section}</p>
 
+      {/* ---------------- ATTENDANCE ---------------- */}
       <h2>Attendance Summary</h2>
       <p>Total Classes: {stats.total}</p>
       <p>Present: {stats.present}</p>
@@ -111,67 +228,112 @@ export default function Academic() {
         <p style={{ color: "red" }}>Warning: Low Attendance!</p>
       )}
 
-      <h2>Attendance</h2>
-      {attendance.length === 0 ? (
-        <p>No data</p>
-      ) : (
-        <table border="1">
-          <thead>
-            <tr>
-              <th>Subject</th>
-              <th>Date</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {attendance.map((a) => (
-              <tr key={a.id}>
-                <td>{a.subject}</td>
-                <td>{a.date}</td>
-                <td>{a.status}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
       <h2>Timetable</h2>
-      <select
-        value={selectedDay}
-        onChange={(e) => setSelectedDay(e.target.value)}
-      >
-        <option>Monday</option>
-        <option>Tuesday</option>
-        <option>Wednesday</option>
-        <option>Thursday</option>
-        <option>Friday</option>
-      </select>
+      <div style={{ marginBottom: "20px" }}>
+        <label htmlFor="semester-select" style={{ marginRight: "12px", fontWeight: 600 }}>
+          Select Semester:
+        </label>
+        <select
+          id="semester-select"
+          value={selectedSemester}
+          onChange={(e) => setSelectedSemester(e.target.value)}
+          style={{ padding: "8px", borderRadius: "6px", border: "1px solid #ccc" }}
+        >
+          <option value="">Choose semester</option>
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((semester) => (
+            <option key={semester} value={semester}>
+              Semester {semester}
+            </option>
+          ))}
+        </select>
+      </div>
 
-      <h2>Timetable ({selectedDay})</h2>
-
-      {filteredTimetable.length === 0 ? (
-        <p>No timetable available</p>
+      {selectedSemester === "" ? (
+        <p>Please select a semester to view your timetable.</p>
+      ) : timetableEntries.length === 0 ? (
+        <p>No timetable available for Semester {selectedSemester} yet.</p>
       ) : (
-        <table border="1">
-          <thead>
-            <tr>
-              <th>Subject</th>
-              <th>Time</th>
-              <th>Faculty</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredTimetable.map((t) => (
-              <tr key={t.id}>
-                <td>{t.subject}</td>
-                <td>{t.time}</td>
-                <td>{t.faculty}</td>
+        <div style={{ overflowX: "auto", marginBottom: "28px" }}>
+          <table
+            border="1"
+            cellPadding="10"
+            cellSpacing="0"
+            style={{ width: "100%", borderCollapse: "collapse", minWidth: "860px" }}
+          >
+            <thead>
+              <tr style={{ background: "#f4f6fb" }}>
+                <th style={{ textAlign: "left", width: "170px", padding: "12px" }}>
+                  Time / Day
+                </th>
+                {timetableDayHeaders.map((day) => (
+                  <th key={day} style={{ textAlign: "center", padding: "12px" }}>
+                    {day}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {timetableRows.map((row) =>
+                row.isBreak ? (
+                  <tr key={row.key} style={{ background: "#eef2f8" }}>
+                    <td
+                      style={{
+                        padding: "12px",
+                        fontWeight: 700,
+                        color: "#0b4d91",
+                        background: "#eef2f8",
+                      }}
+                    >
+                      {row.time}
+                    </td>
+                    <td colSpan={timetableDayHeaders.length} style={{ textAlign: "center", padding: "12px", fontWeight: 700, color: "#0b4d91" }}>
+                      {row.label}
+                    </td>
+                  </tr>
+                ) : (
+                  <tr key={row.key}>
+                    <td style={{ padding: "12px", fontWeight: 600, minWidth: "170px", background: "#fafafa" }}>
+                      <div>{row.time}</div>
+                      <div style={{ marginTop: "6px", color: "#666" }}>{row.label}</div>
+                    </td>
+                    {timetableDayHeaders.map((day) => {
+                      const entry = timetableEntries.find((item) => {
+                        const periodValue = String(item.period);
+                        return (
+                          item.day === day &&
+                          (periodValue === row.key || periodValue === row.key.replace(/^P/, ""))
+                        );
+                      });
+                      return (
+                        <td key={`${day}-${row.key}`} style={{ padding: "12px", minWidth: "140px", verticalAlign: "top" }}>
+                          {entry ? (
+                            <div>
+                              <div style={{ fontWeight: 700 }}>{entry.subject_code || entry.subject}</div>
+                              <div style={{ marginTop: "6px", color: "#333" }}>{entry.subject}</div>
+                              <div style={{ marginTop: "8px", fontSize: "12px", color: "#555" }}>
+                                {entry.faculty}
+                              </div>
+                              {entry.credits ? (
+                                <div style={{ marginTop: "6px", fontSize: "12px", color: "#888" }}>
+                                  Credits: {entry.credits}
+                                </div>
+                              ) : null}
+                            </div>
+                          ) : (
+                            <span style={{ color: "#999" }}>—</span>
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                )
+              )}
+            </tbody>
+          </table>
+        </div>
       )}
 
+      {/* ---------------- ASSIGNMENTS ---------------- */}
       <h2>Assignments</h2>
 
       {filteredAssignments.length === 0 ? (
@@ -184,34 +346,54 @@ export default function Academic() {
               <th>Description</th>
               <th>Deadline</th>
               <th>File</th>
-              <th>Submit</th>
+              <th>Status</th>
+              <th>Marks</th>
+              <th>Feedback</th>
             </tr>
           </thead>
+
           <tbody>
-            {filteredAssignments.map((a) => (
-              <tr key={a.id}>
-                <td>{a.subject}</td>
-                <td>{a.description}</td>
-                <td>{a.deadline}</td>
-                <td>
-                  <a
-                    href={`http://127.0.0.1:8000/media/${a.file}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Download
-                  </a>
-                </td>
-                <td>
-                  <input
-                    type="file"
-                    onChange={(e) =>
-                      handleSubmit(a.id, e.target.files[0])
-                    }
-                  />
-                </td>
-              </tr>
-            ))}
+            {filteredAssignments.map((a) => {
+              const submission = submissions.find(
+                (s) => s.assignment_id === a.id
+              );
+
+              return (
+                <tr key={a.id}>
+                  <td>{a.subject}</td>
+                  <td>{a.description}</td>
+                  <td>{a.deadline}</td>
+
+                  <td>
+                    <a
+                      href={`${BASE_URL}/media/${a.file}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Download
+                    </a>
+                  </td>
+
+                  <td>
+                    {submittedIds.includes(a.id) ? (
+                      <span style={{ color: "green" }}>
+                        Submitted ✅
+                      </span>
+                    ) : (
+                      <input
+                        type="file"
+                        onChange={(e) =>
+                          handleUpload(a.id, e.target.files[0])
+                        }
+                      />
+                    )}
+                  </td>
+
+                  <td>{submission?.marks || "-"}</td>
+                  <td>{submission?.feedback || "-"}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       )}
