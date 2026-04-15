@@ -11,6 +11,13 @@ const API = {
     });
 
     const data = await res.json();
+    if (!res.ok) {
+      const message = data.detail || data.non_field_errors?.[0] || data.error || "Request failed";
+      const error = new Error(message);
+      error.data = data;
+      throw error;
+    }
+
     return data;
   },
 
@@ -22,6 +29,12 @@ const API = {
     });
 
     const data = await res.json();
+    if (!res.ok) {
+      const message = data.detail || data.non_field_errors?.[0] || data.error || "Request failed";
+      const error = new Error(message);
+      error.data = data;
+      throw error;
+    }
     return data;
   },
 };

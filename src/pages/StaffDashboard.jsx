@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function StaffDashboard() {
   const [submissions, setSubmissions] = useState([]);
@@ -49,6 +50,17 @@ export default function StaffDashboard() {
 
   const token = localStorage.getItem("token");
   const userRole = localStorage.getItem("role");
+  const designation = localStorage.getItem("designation");
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!token || userRole !== "staff" || (designation !== "faculty_fa" && designation !== "faculty_subject")) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      localStorage.removeItem("designation");
+      navigate("/staff/roles");
+    }
+  }, [token, userRole, designation, navigate]);
 
   // Period timings
   const periods = [
@@ -1080,62 +1092,43 @@ export default function StaffDashboard() {
 
       <section style={{ marginBottom: "24px" }}>
         <h2>Student Comments Dashboard</h2>
-        {loadingFeedbackResults ? (
-          <p>Loading feedback results...</p>
-        ) : !Array.isArray(feedbackResults) || feedbackResults.length === 0 ? (
-          <p>No feedback responses have been submitted yet.</p>
-        ) : (() => {
-          const commentRows = feedbackResults.flatMap((form, formIndex) => {
-            const responses = Array.isArray(form.responses) ? form.responses : [];
-            const formKey = form.form_id ?? form.id ?? `feedback-form-${formIndex}`;
-            return responses
-              .map((response, responseIndex) => {
-                const parsed = parseFeedbackResponseText(response.response || response.response_text);
-                const comment = parsed?.comments || "";
-                if (!comment || comment.toString().trim() === "") return null;
-                return {
-                  key: `${formKey}-comment-${responseIndex}`,
-                  formTitle: form.title || `Feedback ${formIndex + 1}`,
-                  formType: form.form_type || "semester",
-                  student: response.student || "Unknown",
-                  comment: comment.toString(),
-                  submittedAt: parsed?.submitted_at || "",
-                };
-              })
-              .filter(Boolean);
-          });
-
-          if (commentRows.length === 0) {
-            return <p>No student comments yet.</p>;
-          }
-
-          return (
-            <div style={{ overflowX: "auto" }}>
-              <table border="1" style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr style={{ backgroundColor: "#f2f2f2" }}>
-                    <th style={{ padding: "10px" }}>Feedback Form</th>
-                    <th style={{ padding: "10px" }}>Type</th>
-                    <th style={{ padding: "10px" }}>Student</th>
-                    <th style={{ padding: "10px" }}>Comment</th>
-                    <th style={{ padding: "10px" }}>Submitted At</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {commentRows.map((row) => (
-                    <tr key={row.key}>
-                      <td style={{ padding: "10px" }}>{row.formTitle}</td>
-                      <td style={{ padding: "10px" }}>{row.formType === "event" ? "Event" : row.formType === "faculty" ? "Faculty" : row.formType === "general" ? "General" : "Semester"}</td>
-                      <td style={{ padding: "10px" }}>{row.student}</td>
-                      <td style={{ padding: "10px" }}>{row.comment}</td>
-                      <td style={{ padding: "10px" }}>{row.submittedAt ? new Date(row.submittedAt).toLocaleString() : "-"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          );
-        })()}
+        <p style={{ marginBottom: "12px" }}>
+          Select a feedback category below to view only comments for that category. Student identities are hidden.
+        </p>
+        <div style={{ overflowX: "auto" }}>
+          <table border="1" style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ backgroundColor: "#f2f2f2" }}>
+                {feedbackCategories.map((category) => (
+                  <th key={category.value} style={{ padding: "10px", textAlign: "center" }}>
+                    {category.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                {feedbackCategories.map((category) => (
+                  <td key={category.value} style={{ padding: "12px", textAlign: "center" }}>
+                    <Link
+                      to={`/staff/comments/${category.value}`}
+                      style={{
+                        display: "inline-block",
+                        padding: "10px 16px",
+                        backgroundColor: "#1976d2",
+                        color: "white",
+                        borderRadius: "6px",
+                        textDecoration: "none",
+                      }}
+                    >
+                      View {category.label} Comments
+                    </Link>
+                  </td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <section style={{ marginBottom: "24px" }}>
