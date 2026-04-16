@@ -59,9 +59,9 @@ export default function HODDashboard() {
       link: "/hod/analytics",
     },
     {
-      title: "Timetable Approval",
-      value: "Approve",
-      description: "Approve timetable entries before they go live",
+      title: "Classwise Timetable",
+      value: "Review",
+      description: "Review class timetables, assign faculty, and approve schedule slots",
       link: "/hod/timetables",
     },
   ];

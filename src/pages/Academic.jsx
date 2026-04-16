@@ -1,4 +1,14 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+const getSubjectAbbreviation = (entry) => {
+  if (!entry) return "N/A";
+  if (entry.subject_code) return entry.subject_code;
+  const words = (entry.subject || "").split(/\s+/).filter(Boolean);
+  if (words.length > 1) {
+    return words.map((w) => w[0]).join('').toUpperCase().slice(0, 6);
+  }
+  return (entry.subject || 'N/A').slice(0, 6).toUpperCase();
+};
 
 export default function Academic() {
   const [attendance, setAttendance] = useState([]);
@@ -14,27 +24,13 @@ export default function Academic() {
 
   const BASE_URL = "http://127.0.0.1:8000";
 
-  const handleUnauthorized = () => {
+  const handleUnauthorized = useCallback(() => {
     alert("Session expired. Please login again.");
     localStorage.clear();
     window.location.href = "/login";
-  };
-
-  useEffect(() => {
-    if (!token) return handleUnauthorized();
-
-    fetchAttendance();
-    fetchAssignments();
-    fetchSubmissions();
   }, []);
 
-  useEffect(() => {
-    fetchTimetable();
-  }, [selectedSemester]);
-
-  // ------------------ FETCH ------------------
-
-  const fetchAttendance = async () => {
+  const fetchAttendance = useCallback(async () => {
     try {
       const res = await fetch(
         `${BASE_URL}/api/students/attendance/`,
@@ -50,9 +46,9 @@ export default function Academic() {
     } catch (err) {
       console.error(err);
     }
-  };
+  }, [BASE_URL, handleUnauthorized, token]);
 
-  const fetchAssignments = async () => {
+  const fetchAssignments = useCallback(async () => {
     try {
       const res = await fetch(
         `${BASE_URL}/api/students/assignments/`,
@@ -68,9 +64,9 @@ export default function Academic() {
     } catch (err) {
       console.error(err);
     }
-  };
+  }, [BASE_URL, handleUnauthorized, token]);
 
-  const fetchSubmissions = async () => {
+  const fetchSubmissions = useCallback(async () => {
     try {
       const res = await fetch(
         `${BASE_URL}/api/students/my-submissions/`,
@@ -86,43 +82,54 @@ export default function Academic() {
     } catch (err) {
       console.error(err);
     }
-  };
+  }, [BASE_URL, handleUnauthorized, token]);
 
-  const fetchTimetable = async () => {
-    if (!selectedSemester) {
-      setTimetableEntries([]);
-      return;
-    }
+  useEffect(() => {
+    if (!token) return handleUnauthorized();
+    fetchAttendance();
+    fetchAssignments();
+    fetchSubmissions();
+  }, [fetchAttendance, fetchAssignments, fetchSubmissions, handleUnauthorized, token]);
 
-    try {
-      const params = new URLSearchParams();
-      if (department) params.set("department", department);
-      if (year) params.set("year", year);
-      if (section) params.set("section", section);
-      params.set("semester", selectedSemester);
+  useEffect(() => {
+    const fetchTimetable = async () => {
+      if (!selectedSemester) {
+        setTimetableEntries([]);
+        return;
+      }
 
-      const res = await fetch(
-        `${BASE_URL}/api/students/timetable/${params.toString() ? `?${params.toString()}` : ""}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      try {
+        const params = new URLSearchParams();
+        if (department) params.set("department", department);
+        if (year) params.set("year", year);
+        if (section) params.set("section", section);
+        params.set("semester", selectedSemester);
 
-      if (res.status === 401) return handleUnauthorized();
-      if (!res.ok) return;
+        const res = await fetch(
+          `${BASE_URL}/api/students/timetable/${params.toString() ? `?${params.toString()}` : ""}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
 
-      const data = await res.json();
-      const entries = Array.isArray(data) ? data : [];
-      const filteredEntries = entries.filter(
-        (entry) =>
-          entry.department === department &&
-          entry.year === year &&
-          entry.section === section &&
-          String(entry.semester) === String(selectedSemester)
-      );
-      setTimetableEntries(filteredEntries);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+        if (res.status === 401) return handleUnauthorized();
+        if (!res.ok) return;
+
+        const data = await res.json();
+        const entries = Array.isArray(data) ? data : [];
+        const filteredEntries = entries.filter(
+          (entry) =>
+            entry.department === department &&
+            entry.year === year &&
+            entry.section === section &&
+            String(entry.semester) === String(selectedSemester)
+        );
+        setTimetableEntries(filteredEntries);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchTimetable();
+  }, [BASE_URL, department, handleUnauthorized, section, selectedSemester, token, year]);
 
   // ------------------ UPLOAD ------------------
 
@@ -193,6 +200,25 @@ export default function Academic() {
     { key: "P8", label: "Period 8", time: "4:10 PM - 5:00 PM", isBreak: false },
   ];
 
+  const subjectDetails = useMemo(() => {
+    const map = {};
+    timetableEntries.forEach((entry) => {
+      const key = entry.subject_code || entry.subject || `subject-${entry.id}`;
+      if (!map[key]) {
+        map[key] = {
+          subject_code: entry.subject_code || 'N/A',
+          abbreviation: getSubjectAbbreviation(entry),
+          subject_title: entry.subject || 'N/A',
+          credits: entry.credits != null ? entry.credits : '-',
+          periods_per_week: 0,
+          faculty: entry.faculty || 'Unassigned',
+        };
+      }
+      map[key].periods_per_week += 1;
+    });
+    return Object.values(map);
+  }, [timetableEntries]);
+
   const stats = calculateStats();
 
   // ------------------ FILTER ------------------
@@ -253,84 +279,113 @@ export default function Academic() {
       ) : timetableEntries.length === 0 ? (
         <p>No timetable available for Semester {selectedSemester} yet.</p>
       ) : (
-        <div style={{ overflowX: "auto", marginBottom: "28px" }}>
-          <table
-            border="1"
-            cellPadding="10"
-            cellSpacing="0"
-            style={{ width: "100%", borderCollapse: "collapse", minWidth: "860px" }}
-          >
-            <thead>
-              <tr style={{ background: "#f4f6fb" }}>
-                <th style={{ textAlign: "left", width: "170px", padding: "12px" }}>
-                  Time / Day
-                </th>
-                {timetableDayHeaders.map((day) => (
-                  <th key={day} style={{ textAlign: "center", padding: "12px" }}>
-                    {day}
+        <>
+          <div style={{ overflowX: "auto", marginBottom: "28px" }}>
+            <table
+              border="1"
+              cellPadding="10"
+              cellSpacing="0"
+              style={{ width: "100%", borderCollapse: "collapse", minWidth: "860px" }}
+            >
+              <thead>
+                <tr style={{ background: "#f4f6fb" }}>
+                  <th style={{ textAlign: "left", width: "170px", padding: "12px" }}>
+                    Time / Day
                   </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {timetableRows.map((row) =>
-                row.isBreak ? (
-                  <tr key={row.key} style={{ background: "#eef2f8" }}>
-                    <td
-                      style={{
-                        padding: "12px",
-                        fontWeight: 700,
-                        color: "#0b4d91",
-                        background: "#eef2f8",
-                      }}
-                    >
-                      {row.time}
-                    </td>
-                    <td colSpan={timetableDayHeaders.length} style={{ textAlign: "center", padding: "12px", fontWeight: 700, color: "#0b4d91" }}>
-                      {row.label}
-                    </td>
-                  </tr>
-                ) : (
-                  <tr key={row.key}>
-                    <td style={{ padding: "12px", fontWeight: 600, minWidth: "170px", background: "#fafafa" }}>
-                      <div>{row.time}</div>
-                      <div style={{ marginTop: "6px", color: "#666" }}>{row.label}</div>
-                    </td>
-                    {timetableDayHeaders.map((day) => {
-                      const entry = timetableEntries.find((item) => {
-                        const periodValue = String(item.period);
+                  {timetableDayHeaders.map((day) => (
+                    <th key={day} style={{ textAlign: "center", padding: "12px" }}>
+                      {day}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {timetableRows.map((row) =>
+                  row.isBreak ? (
+                    <tr key={row.key} style={{ background: "#eef2f8" }}>
+                      <td
+                        style={{
+                          padding: "12px",
+                          fontWeight: 700,
+                          color: "#0b4d91",
+                          background: "#eef2f8",
+                        }}
+                      >
+                        {row.time}
+                      </td>
+                      <td colSpan={timetableDayHeaders.length} style={{ textAlign: "center", padding: "12px", fontWeight: 700, color: "#0b4d91" }}>
+                        {row.label}
+                      </td>
+                    </tr>
+                  ) : (
+                    <tr key={row.key}>
+                      <td style={{ padding: "12px", fontWeight: 600, minWidth: "170px", background: "#fafafa" }}>
+                        <div>{row.time}</div>
+                        <div style={{ marginTop: "6px", color: "#666" }}>{row.label}</div>
+                      </td>
+                      {timetableDayHeaders.map((day) => {
+                        const entry = timetableEntries.find((item) => {
+                          const periodValue = String(item.period);
+                          return (
+                            item.day === day &&
+                            (periodValue === row.key || periodValue === row.key.replace(/^P/, ""))
+                          );
+                        });
                         return (
-                          item.day === day &&
-                          (periodValue === row.key || periodValue === row.key.replace(/^P/, ""))
-                        );
-                      });
-                      return (
-                        <td key={`${day}-${row.key}`} style={{ padding: "12px", minWidth: "140px", verticalAlign: "top" }}>
-                          {entry ? (
-                            <div>
-                              <div style={{ fontWeight: 700 }}>{entry.subject_code || entry.subject}</div>
-                              <div style={{ marginTop: "6px", color: "#333" }}>{entry.subject}</div>
-                              <div style={{ marginTop: "8px", fontSize: "12px", color: "#555" }}>
-                                {entry.faculty}
-                              </div>
-                              {entry.credits ? (
-                                <div style={{ marginTop: "6px", fontSize: "12px", color: "#888" }}>
-                                  Credits: {entry.credits}
+                          <td key={`${day}-${row.key}`} style={{ padding: "12px", minWidth: "140px", verticalAlign: "top" }}>
+                            {entry ? (
+                              <div>
+                                <div style={{ fontWeight: 700 }}>{entry.subject_code || entry.subject}</div>
+                                <div style={{ marginTop: "6px", color: "#333" }}>{entry.subject}</div>
+                                <div style={{ marginTop: "8px", fontSize: "12px", color: "#555" }}>
+                                  {entry.faculty}
                                 </div>
-                              ) : null}
-                            </div>
-                          ) : (
-                            <span style={{ color: "#999" }}>—</span>
-                          )}
-                        </td>
-                      );
-                    })}
+                                {entry.credits ? (
+                                  <div style={{ marginTop: "6px", fontSize: "12px", color: "#888" }}>
+                                    Credits: {entry.credits}
+                                  </div>
+                                ) : null}
+                              </div>
+                            ) : (
+                              <span style={{ color: "#999" }}>—</span>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  )
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div style={{ overflowX: 'auto', marginBottom: '32px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '850px' }}>
+              <thead>
+                <tr style={{ backgroundColor: '#f9fafb' }}>
+                  <th style={detailsHeader}>Subject Code</th>
+                  <th style={detailsHeader}>Abbreviation</th>
+                  <th style={detailsHeader}>Subject Title</th>
+                  <th style={detailsHeader}>Credits</th>
+                  <th style={detailsHeader}>Periods / Week</th>
+                  <th style={detailsHeader}>Faculty in Charge</th>
+                </tr>
+              </thead>
+              <tbody>
+                {subjectDetails.map((detail) => (
+                  <tr key={`${detail.subject_code}-${detail.subject_title}`}>
+                    <td style={detailsCell}>{detail.subject_code}</td>
+                    <td style={detailsCell}>{detail.abbreviation}</td>
+                    <td style={detailsCell}>{detail.subject_title}</td>
+                    <td style={detailsCell}>{detail.credits}</td>
+                    <td style={detailsCell}>{detail.periods_per_week}</td>
+                    <td style={detailsCell}>{detail.faculty}</td>
                   </tr>
-                )
-              )}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {/* ---------------- ASSIGNMENTS ---------------- */}
@@ -400,3 +455,18 @@ export default function Academic() {
     </div>
   );
 }
+
+const detailsHeader = {
+  textAlign: 'left',
+  padding: '12px',
+  borderBottom: '2px solid #d1d5db',
+  color: '#111827',
+  fontSize: '13px',
+};
+
+const detailsCell = {
+  padding: '12px',
+  borderBottom: '1px solid #e5e7eb',
+  color: '#374151',
+  fontSize: '13px',
+};

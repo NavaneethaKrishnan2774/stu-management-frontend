@@ -48,6 +48,8 @@ export default function StaffDashboard() {
   const [timetableSubjectCode, setTimetableSubjectCode] = useState("");
   const [timetableSubjectName, setTimetableSubjectName] = useState("");
   const [timetableCredits, setTimetableCredits] = useState("");
+  const [editingTimetableId, setEditingTimetableId] = useState(null);
+  const [isEditingTimetable, setIsEditingTimetable] = useState(false);
 
   const token = normalizeToken(localStorage.getItem("token"));
   const userRole = localStorage.getItem("role");
@@ -450,6 +452,105 @@ export default function StaffDashboard() {
     }
   };
 
+  const handleSubmitTimetable = async (id) => {
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/api/students/submit-timetable/${id}/`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Failed to submit timetable entry");
+        return;
+      }
+      alert("Timetable entry submitted for HOD review");
+      fetchTimetables();
+    } catch (err) {
+      console.error(err);
+      alert("Unable to submit timetable entry");
+    }
+  };
+
+  const resetTimetableForm = () => {
+    setEditingTimetableId(null);
+    setIsEditingTimetable(false);
+    setTimetableDepartment("");
+    setTimetableYear("");
+    setTimetableSection("");
+    setTimetableSemester("");
+    setTimetableDay("");
+    setTimetablePeriod("");
+    setTimetableFaculty("");
+    setTimetableSubjectCode("");
+    setTimetableSubjectName("");
+    setTimetableCredits("");
+  };
+
+  const handleEditTimetable = (timetable) => {
+    setShowTimetableForm(true);
+    setIsEditingTimetable(true);
+    setEditingTimetableId(timetable.id);
+    setTimetableDepartment(timetable.department || "");
+    setTimetableYear(timetable.year || "");
+    setTimetableSection(timetable.section || "");
+    setTimetableSemester(timetable.semester || "");
+    setTimetableDay(timetable.day || "");
+    setTimetablePeriod(timetable.period || "");
+    setTimetableFaculty(timetable.faculty_id || "");
+    setTimetableSubjectCode(timetable.subject_code || "");
+    setTimetableSubjectName(timetable.subject || "");
+    setTimetableCredits(timetable.credits || "");
+  };
+
+  const handleUpdateTimetable = async () => {
+    if (!editingTimetableId) {
+      alert("No timetable entry selected for editing");
+      return;
+    }
+
+    if (!timetableDepartment || !timetableYear || !timetableSection || !timetableSemester ||
+        !timetableDay || !timetablePeriod || !timetableFaculty || !timetableSubjectCode ||
+        !timetableSubjectName || !timetableCredits) {
+      alert("Please fill all timetable fields");
+      return;
+    }
+
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/api/students/update-timetable/${editingTimetableId}/`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          department: timetableDepartment,
+          year: timetableYear,
+          section: timetableSection,
+          semester: timetableSemester,
+          day: timetableDay,
+          period: timetablePeriod,
+          faculty_id: timetableFaculty,
+          subject_code: timetableSubjectCode,
+          subject_name: timetableSubjectName,
+          credits: parseInt(timetableCredits, 10),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Failed to update timetable entry");
+        return;
+      }
+      alert("Timetable entry updated successfully");
+      resetTimetableForm();
+      fetchTimetables();
+    } catch (err) {
+      console.error(err);
+      alert("Unable to update timetable entry");
+    }
+  };
+
   // ✅ CREATE NOTIFICATION
   const handleCreateNotification = async () => {
     if (title.length < 5 || message.length < 10) {
@@ -749,7 +850,7 @@ export default function StaffDashboard() {
             <div style={{ marginBottom: "16px", padding: "12px", background: "#eef6ff", borderRadius: "8px" }}>
               <strong>Tip:</strong> If you want to see the full staff list, visit the <a href="/admin/dashboard">Admin page</a>.
             </div>
-            <h3>Create Timetable Entry</h3>
+            <h3>{isEditingTimetable ? "Edit Timetable Entry" : "Create Timetable Entry"}</h3>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "12px" }}>
               <div>
                 <label style={{ fontSize: "12px", fontWeight: "bold", display: "block", marginBottom: "4px" }}>Department:</label>
@@ -907,9 +1008,16 @@ export default function StaffDashboard() {
               </div>
             </div>
 
-            <button onClick={handleCreateTimetable} style={{ padding: "8px 16px", backgroundColor: "#2196F3", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}>
-              Create Timetable Entry
-            </button>
+            <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+              <button onClick={isEditingTimetable ? handleUpdateTimetable : handleCreateTimetable} style={{ padding: "8px 16px", backgroundColor: "#2196F3", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}>
+                {isEditingTimetable ? "Save Changes" : "Create Timetable Entry"}
+              </button>
+              {isEditingTimetable && (
+                <button onClick={resetTimetableForm} style={{ padding: "8px 16px", backgroundColor: "#757575", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}>
+                  Cancel
+                </button>
+              )}
+            </div>
           </div>
         )}
 
@@ -931,6 +1039,8 @@ export default function StaffDashboard() {
                   <th>Subject Name</th>
                   <th>Faculty</th>
                   <th>Credits</th>
+                  <th>Status</th>
+                  <th>HOD Comment</th>
                   <th>Action</th>
                 </tr>
               </thead>
@@ -953,7 +1063,19 @@ export default function StaffDashboard() {
                       <td>{t.subject_name}</td>
                       <td>{t.faculty_name || t.faculty?.first_name || "Unknown"}</td>
                       <td>{t.credits}</td>
-                      <td>
+                      <td>{t.approval_status || (t.is_approved ? 'approved' : 'draft')}</td>
+                      <td>{t.hod_comment || '-'}</td>
+                      <td style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        {t.approval_status !== 'approved' && (
+                          <button onClick={() => handleEditTimetable(t)} style={{ padding: "4px 8px", backgroundColor: "#4caf50", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}>
+                            Edit
+                          </button>
+                        )}
+                        {['draft', 'rejected', 'rework_assigned'].includes(t.approval_status) && (
+                          <button onClick={() => handleSubmitTimetable(t.id)} style={{ padding: "4px 8px", backgroundColor: "#1976d2", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}>
+                            Submit
+                          </button>
+                        )}
                         <button onClick={() => handleDeleteTimetable(t.id)} style={{ padding: "4px 8px", backgroundColor: "#f44336", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}>
                           Delete
                         </button>
@@ -1425,4 +1547,4 @@ export default function StaffDashboard() {
       </table>
     </div>
   );
-}
+} 
