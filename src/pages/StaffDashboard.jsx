@@ -1060,8 +1060,8 @@ export default function StaffDashboard() {
                         <small>{periodInfo ? periodInfo.time : ""}</small>
                       </td>
                       <td>{t.subject_code}</td>
-                      <td>{t.subject_name}</td>
-                      <td>{t.faculty_name || t.faculty?.first_name || "Unknown"}</td>
+                      <td>{t.subject || t.subject_name || "-"}</td>
+                      <td>{t.faculty || "Unknown"}</td>
                       <td>{t.credits}</td>
                       <td>{t.approval_status || (t.is_approved ? 'approved' : 'draft')}</td>
                       <td>{t.hod_comment || '-'}</td>

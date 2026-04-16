@@ -10,6 +10,7 @@ export default function StudentDashboard() {
   const [open, setOpen] = useState(false);
   const [feedbackForms, setFeedbackForms] = useState([]);
   const [semesterSubjects, setSemesterSubjects] = useState([]);
+  const [semesterTimetableEntries, setSemesterTimetableEntries] = useState([]);
   const [facultyOptions, setFacultyOptions] = useState([]);
   const [selectedSemester, setSelectedSemester] = useState("");
   const [selectedFeedbackFormId, setSelectedFeedbackFormId] = useState("");
@@ -189,7 +190,11 @@ export default function StudentDashboard() {
   }, [selectedSemester, token]);
 
   const fetchSemesterSubjects = useCallback(async () => {
-    if (!selectedSemester) return;
+    if (!selectedSemester) {
+      setSemesterSubjects([]);
+      setSemesterTimetableEntries([]);
+      return;
+    }
     try {
       const params = new URLSearchParams();
       if (department) params.set("department", department);
@@ -202,15 +207,17 @@ export default function StudentDashboard() {
       });
       if (!res.ok) return;
       const data = await res.json();
+      const entries = Array.isArray(data) ? data : [];
       const uniqueSubjects = Array.from(
         new Map(
-          (Array.isArray(data) ? data : []).map((entry) => [
+          entries.map((entry) => [
             entry.subject_code || entry.subject,
             { subject_code: entry.subject_code, subject: entry.subject },
           ])
         ).values()
       );
       setSemesterSubjects(uniqueSubjects);
+      setSemesterTimetableEntries(entries);
     } catch (err) {
       console.error(err);
     }
@@ -391,6 +398,98 @@ export default function StudentDashboard() {
     }
   };
 
+  const timetableDayHeaders = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+  ];
+
+  const timetableRows = [
+    { key: "P1", label: "Period 1", time: "9:00 AM - 9:50 AM", isBreak: false },
+    { key: "P2", label: "Period 2", time: "9:50 AM - 10:40 AM", isBreak: false },
+    { key: "BR1", label: "BREAK", time: "10:40 AM - 10:55 AM", isBreak: true },
+    { key: "P3", label: "Period 3", time: "10:55 AM - 11:45 AM", isBreak: false },
+    { key: "P4", label: "Period 4", time: "11:45 AM - 12:35 PM", isBreak: false },
+    { key: "LN", label: "LUNCH", time: "12:35 PM - 1:25 PM", isBreak: true },
+    { key: "P5", label: "Period 5", time: "1:25 PM - 2:15 PM", isBreak: false },
+    { key: "P6", label: "Period 6", time: "2:15 PM - 3:05 PM", isBreak: false },
+    { key: "BR2", label: "BREAK", time: "3:05 PM - 3:20 PM", isBreak: true },
+    { key: "P7", label: "Period 7", time: "3:20 PM - 4:10 PM", isBreak: false },
+    { key: "P8", label: "Period 8", time: "4:10 PM - 5:00 PM", isBreak: false },
+  ];
+
+  const generateTimetableHtml = () => {
+    const heading = `Timetable for ${department}-${year}${section} Semester ${selectedSemester}`;
+    const rowsHtml = timetableRows
+      .map((row) => {
+        if (row.isBreak) {
+          return `<tr style="background:#eef2f8;"><td style="padding:12px;font-weight:700;color:#0b4d91;">${row.time}</td><td colspan="6" style="text-align:center;padding:12px;font-weight:700;color:#0b4d91;">${row.label}</td></tr>`;
+        }
+
+        const cells = timetableDayHeaders
+          .map((day) => {
+            const entry = semesterTimetableEntries.find((item) => {
+              const periodValue = String(item.period || "");
+              return item.day === day && (periodValue === row.key || periodValue === row.key.replace(/^P/, ""));
+            });
+            if (!entry) {
+              return `<td style="padding:12px;min-width:140px;vertical-align:top;color:#999;">—</td>`;
+            }
+            return `<td style="padding:12px;min-width:140px;vertical-align:top;"><div style="font-weight:700;">${entry.subject_code || entry.subject || "N/A"}</div><div style="margin-top:6px;color:#333;">${entry.subject || ""}</div><div style="margin-top:8px;font-size:12px;color:#555;">${entry.faculty || "Unassigned"}</div>${entry.credits ? `<div style="margin-top:6px;font-size:12px;color:#888;">Credits: ${entry.credits}</div>` : ""}</td>`;
+          })
+          .join("");
+
+        return `<tr><td style="padding:12px;font-weight:600;min-width:170px;background:#fafafa;">${row.time}<div style="margin-top:6px;color:#666;">${row.label}</div></td>${cells}</tr>`;
+      })
+      .join("");
+
+    const subjectRows = semesterSubjects
+      .map((subject) => {
+        const key = subject.subject_code || subject.subject || "";
+        const entry = semesterTimetableEntries.find((item) => item.subject_code === subject.subject_code || item.subject === subject.subject);
+        return `<tr><td style="padding:12px;border-bottom:1px solid #e5e7eb;">${subject.subject_code || "N/A"}</td><td style="padding:12px;border-bottom:1px solid #e5e7eb;">${subject.subject_code ? subject.subject_code : key}</td><td style="padding:12px;border-bottom:1px solid #e5e7eb;">${subject.subject || "N/A"}</td><td style="padding:12px;border-bottom:1px solid #e5e7eb;">${entry?.credits ?? "-"}</td><td style="padding:12px;border-bottom:1px solid #e5e7eb;">${semesterTimetableEntries.filter((item) => item.subject_code === subject.subject_code || item.subject === subject.subject).length}</td><td style="padding:12px;border-bottom:1px solid #e5e7eb;">${entry?.faculty || "Unassigned"}</td></tr>`;
+      })
+      .join("");
+
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>${heading}</title>
+</head>
+<body style="font-family:Arial,Helvetica,sans-serif;color:#212121;line-height:1.5;">
+  <h1 style="text-align:center;">${heading}</h1>
+  <p style="text-align:center;margin-top:0;">Class: ${department}-${section} | Year: ${year} | Semester: ${selectedSemester}</p>
+  <table style="width:100%;border-collapse:collapse;margin-top:20px;" border="1">
+    <thead><tr style="background:#f4f6fb;"><th style="padding:12px;text-align:left;">Time / Day</th>${timetableDayHeaders.map((day) => `<th style="padding:12px;text-align:center;">${day}</th>`).join("")}</tr></thead>
+    <tbody>${rowsHtml}</tbody>
+  </table>
+  <h2 style="margin-top:30px;">Subject Summary</h2>
+  <table style="width:100%;border-collapse:collapse;" border="1">
+    <thead><tr style="background:#f9fafb;"><th style="padding:12px;text-align:left;">Subject Code</th><th style="padding:12px;text-align:left;">Abbreviation</th><th style="padding:12px;text-align:left;">Subject Title</th><th style="padding:12px;text-align:left;">Credits</th><th style="padding:12px;text-align:left;">Periods / Week</th><th style="padding:12px;text-align:left;">Faculty in Charge</th></tr></thead>
+    <tbody>${subjectRows}</tbody>
+  </table>
+</body>
+</html>`;
+  };
+
+  const handleDownloadTimetable = () => {
+    if (!semesterTimetableEntries.length || !selectedSemester) return;
+    const html = generateTimetableHtml();
+    const blob = new Blob([html], { type: "application/msword" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `timetable-${department}-${year}${section}-sem${selectedSemester}.doc`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   useEffect(() => {
     fetchNotifications();
     fetchCount();
@@ -528,6 +627,146 @@ export default function StudentDashboard() {
           <p style={{ color: "red", fontWeight: "bold" }}>
             ⚠ Low Attendance: Please improve your attendance.
           </p>
+        )}
+      </div>
+
+      <div style={{ marginTop: "24px", padding: "20px", border: "1px solid #ddd", borderRadius: "14px", background: "#f9fbff" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+          <div>
+            <h3 style={{ margin: 0 }}>Approved Timetable</h3>
+            <p style={{ margin: "6px 0 0", color: "#555" }}>
+              View your class timetable for the selected semester. Only HOD-approved entries are shown.
+            </p>
+          </div>
+          <button
+            onClick={handleDownloadTimetable}
+            disabled={!semesterTimetableEntries.length || !selectedSemester}
+            style={{ padding: "10px 16px", borderRadius: "10px", background: "#1976d2", color: "white", border: "none", cursor: semesterTimetableEntries.length ? "pointer" : "not-allowed" }}
+          >
+            Download Timetable
+          </button>
+        </div>
+
+        {selectedSemester === "" ? (
+          <p style={{ marginTop: "18px" }}>Choose a semester below to load your approved timetable.</p>
+        ) : semesterTimetableEntries.length === 0 ? (
+          <p style={{ marginTop: "18px" }}>
+            No approved timetable is available for Semester {selectedSemester} yet.
+          </p>
+        ) : (
+          <div style={{ overflowX: "auto", marginTop: "18px" }}>
+            <table
+              border="1"
+              cellPadding="10"
+              cellSpacing="0"
+              style={{ width: "100%", borderCollapse: "collapse", minWidth: "860px" }}
+            >
+              <thead>
+                <tr style={{ background: "#f4f6fb" }}>
+                  <th style={{ textAlign: "left", width: "170px", padding: "12px" }}>
+                    Time / Day
+                  </th>
+                  {timetableDayHeaders.map((day) => (
+                    <th key={day} style={{ textAlign: "center", padding: "12px" }}>
+                      {day}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {timetableRows.map((row) =>
+                  row.isBreak ? (
+                    <tr key={row.key} style={{ background: "#eef2f8" }}>
+                      <td
+                        style={{
+                          padding: "12px",
+                          fontWeight: 700,
+                          color: "#0b4d91",
+                          background: "#eef2f8",
+                        }}
+                      >
+                        {row.time}
+                      </td>
+                      <td colSpan={timetableDayHeaders.length} style={{ textAlign: "center", padding: "12px", fontWeight: 700, color: "#0b4d91" }}>
+                        {row.label}
+                      </td>
+                    </tr>
+                  ) : (
+                    <tr key={row.key}>
+                      <td style={{ padding: "12px", fontWeight: 600, minWidth: "170px", background: "#fafafa" }}>
+                        <div>{row.time}</div>
+                        <div style={{ marginTop: "6px", color: "#666" }}>{row.label}</div>
+                      </td>
+                      {timetableDayHeaders.map((day) => {
+                        const entry = semesterTimetableEntries.find((item) => {
+                          const periodValue = String(item.period || "");
+                          return (
+                            item.day === day &&
+                            (periodValue === row.key || periodValue === row.key.replace(/^P/, ""))
+                          );
+                        });
+                        return (
+                          <td key={`${day}-${row.key}`} style={{ padding: "12px", minWidth: "140px", verticalAlign: "top" }}>
+                            {entry ? (
+                              <div>
+                                <div style={{ fontWeight: 700 }}>{entry.subject_code || entry.subject}</div>
+                                <div style={{ marginTop: "6px", color: "#333" }}>{entry.subject}</div>
+                                <div style={{ marginTop: "8px", fontSize: "12px", color: "#555" }}>
+                                  {entry.faculty}
+                                </div>
+                                {entry.credits ? (
+                                  <div style={{ marginTop: "6px", fontSize: "12px", color: "#888" }}>
+                                    Credits: {entry.credits}
+                                  </div>
+                                ) : null}
+                              </div>
+                            ) : (
+                              <span style={{ color: "#999" }}>—</span>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  )
+                )}
+              </tbody>
+            </table>
+
+            <div style={{ overflowX: 'auto', marginTop: '24px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '850px' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#f9fafb' }}>
+                    <th style={detailsHeader}>Subject Code</th>
+                    <th style={detailsHeader}>Abbreviation</th>
+                    <th style={detailsHeader}>Subject Title</th>
+                    <th style={detailsHeader}>Credits</th>
+                    <th style={detailsHeader}>Periods / Week</th>
+                    <th style={detailsHeader}>Faculty in Charge</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {semesterSubjects.map((subject) => {
+                    const entry = semesterTimetableEntries.find(
+                      (item) => item.subject_code === subject.subject_code || item.subject === subject.subject
+                    );
+                    const periods = semesterTimetableEntries.filter(
+                      (item) => item.subject_code === subject.subject_code || item.subject === subject.subject
+                    ).length;
+                    return (
+                      <tr key={`${subject.subject_code}-${subject.subject}`}>
+                        <td style={detailsCell}>{subject.subject_code || 'N/A'}</td>
+                        <td style={detailsCell}>{subject.subject_code || subject.subject}</td>
+                        <td style={detailsCell}>{subject.subject || 'N/A'}</td>
+                        <td style={detailsCell}>{entry?.credits ?? '-'}</td>
+                        <td style={detailsCell}>{periods}</td>
+                        <td style={detailsCell}>{entry?.faculty || 'Unassigned'}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
       </div>
 

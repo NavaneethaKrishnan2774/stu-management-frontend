@@ -4,7 +4,13 @@ const normalizeToken = (token) => {
   if (!token || token === "null" || token === "undefined") {
     return null;
   }
-  return token;
+
+  const trimmed = token.toString().trim();
+  if (/^Bearer\s+/i.test(trimmed)) {
+    return trimmed.replace(/^Bearer\s+/i, "");
+  }
+
+  return trimmed;
 };
 
 const API = {
