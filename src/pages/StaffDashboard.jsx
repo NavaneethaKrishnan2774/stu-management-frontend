@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { normalizeToken } from "../services/api";
 
 export default function StaffDashboard() {
   const [submissions, setSubmissions] = useState([]);
@@ -48,9 +49,13 @@ export default function StaffDashboard() {
   const [timetableSubjectName, setTimetableSubjectName] = useState("");
   const [timetableCredits, setTimetableCredits] = useState("");
 
-  const token = localStorage.getItem("token");
+  const token = normalizeToken(localStorage.getItem("token"));
   const userRole = localStorage.getItem("role");
   const designation = localStorage.getItem("designation");
+  const savedDepartment = localStorage.getItem("department") || "";
+  const savedYear = localStorage.getItem("year") || "";
+  const savedSection = localStorage.getItem("section") || "";
+  const isFacultyFA = designation === "faculty_fa";
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -61,6 +66,20 @@ export default function StaffDashboard() {
       navigate("/staff/roles");
     }
   }, [token, userRole, designation, navigate]);
+
+  useEffect(() => {
+    if (isFacultyFA) {
+      setDepartment(savedDepartment);
+      setYear(savedYear);
+      setSection(savedSection);
+      setFeedbackDepartment(savedDepartment);
+      setFeedbackYear(savedYear);
+      setFeedbackSection(savedSection);
+      setTimetableDepartment(savedDepartment);
+      setTimetableYear(savedYear);
+      setTimetableSection(savedSection);
+    }
+  }, [isFacultyFA, savedDepartment, savedYear, savedSection]);
 
   // Period timings
   const periods = [
@@ -306,7 +325,7 @@ export default function StaffDashboard() {
 
   const fetchSubmissions = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = normalizeToken(localStorage.getItem("token"));
 
       const res = await fetch(
         "http://127.0.0.1:8000/api/students/submissions/",
@@ -335,7 +354,7 @@ export default function StaffDashboard() {
   };
 
   const fetchNotifications = async () => {
-    const token = localStorage.getItem("token");
+    const token = normalizeToken(localStorage.getItem("token"));
 
     const res = await fetch(
       "http://127.0.0.1:8000/api/students/notifications/",
@@ -443,7 +462,7 @@ export default function StaffDashboard() {
       return;
     }
 
-    const token = localStorage.getItem("token");
+    const token = normalizeToken(localStorage.getItem("token"));
 
     const scheduledTimeValue = scheduledTime
       ? new Date(scheduledTime).toISOString()
@@ -578,7 +597,7 @@ export default function StaffDashboard() {
   // 🔥 REPLACED DELETE FUNCTION
   const handleDelete = async (id) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = normalizeToken(localStorage.getItem("token"));
 
       const res = await fetch(
         `http://127.0.0.1:8000/api/students/delete-notification/${id}/`,
@@ -636,7 +655,7 @@ export default function StaffDashboard() {
   const handleGrade = async (id, marks, feedback) => {
     if (!marks) return alert("Enter marks");
 
-    const token = localStorage.getItem("token");
+    const token = normalizeToken(localStorage.getItem("token"));
 
     const res = await fetch(
       "http://127.0.0.1:8000/api/students/grade/",
@@ -679,7 +698,7 @@ export default function StaffDashboard() {
         placeholder="Message"
       />
 
-      <select value={department} onChange={(e) => setDepartment(e.target.value)}>
+      <select value={department} onChange={(e) => setDepartment(e.target.value)} disabled={isFacultyFA}>
         <option value="">Select Department</option>
         <option value="all">All Departments</option>
         <option value="CSE">CSE</option>
@@ -688,7 +707,7 @@ export default function StaffDashboard() {
         <option value="MECH">MECH</option>
       </select>
 
-      <select value={year} onChange={(e) => setYear(e.target.value)}>
+      <select value={year} onChange={(e) => setYear(e.target.value)} disabled={isFacultyFA}>
         <option value="">Select Year</option>
         <option value="all">All Years</option>
         <option value="1">1st Year</option>
@@ -697,7 +716,7 @@ export default function StaffDashboard() {
         <option value="4">4th Year</option>
       </select>
 
-      <select value={section} onChange={(e) => setSection(e.target.value)}>
+      <select value={section} onChange={(e) => setSection(e.target.value)} disabled={isFacultyFA}>
         <option value="">Select Section</option>
         <option value="all">All Sections</option>
         <option value="A">A</option>
@@ -737,6 +756,7 @@ export default function StaffDashboard() {
                 <select 
                   value={timetableDepartment} 
                   onChange={(e) => setTimetableDepartment(e.target.value)}
+                  disabled={isFacultyFA}
                   style={{ width: "100%", padding: "6px", fontSize: "13px" }}
                 >
                   <option value="">Select Department</option>
@@ -753,6 +773,7 @@ export default function StaffDashboard() {
                 <select 
                   value={timetableYear} 
                   onChange={(e) => setTimetableYear(e.target.value)}
+                  disabled={isFacultyFA}
                   style={{ width: "100%", padding: "6px", fontSize: "13px" }}
                 >
                   <option value="">Select Year</option>
@@ -768,6 +789,7 @@ export default function StaffDashboard() {
                 <select 
                   value={timetableSection} 
                   onChange={(e) => setTimetableSection(e.target.value)}
+                  disabled={isFacultyFA}
                   style={{ width: "100%", padding: "6px", fontSize: "13px" }}
                 >
                   <option value="">Select Section</option>
@@ -1024,6 +1046,7 @@ export default function StaffDashboard() {
             <select 
               value={feedbackDepartment} 
               onChange={(e) => setFeedbackDepartment(e.target.value)}
+              disabled={isFacultyFA}
               style={{ width: "100%", padding: "6px", fontSize: "13px" }}
             >
               <option value="">Select Dept</option>
@@ -1041,6 +1064,7 @@ export default function StaffDashboard() {
             <select 
               value={feedbackYear} 
               onChange={(e) => setFeedbackYear(e.target.value)}
+              disabled={isFacultyFA}
               style={{ width: "100%", padding: "6px", fontSize: "13px" }}
             >
               <option value="">Select Year</option>
@@ -1057,6 +1081,7 @@ export default function StaffDashboard() {
             <select 
               value={feedbackSection} 
               onChange={(e) => setFeedbackSection(e.target.value)}
+              disabled={isFacultyFA}
               style={{ width: "100%", padding: "6px", fontSize: "13px" }}
             >
               <option value="">Select Section</option>

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { normalizeToken } from "../services/api";
 
 const BASE_URL = "http://127.0.0.1:8000";
 
@@ -23,7 +24,14 @@ export default function StudentDashboard() {
   const department = localStorage.getItem("department") || "";
   const year = localStorage.getItem("year") || "";
   const section = localStorage.getItem("section") || "";
-  const token = localStorage.getItem("token");
+  const token = normalizeToken(localStorage.getItem("token"));
+
+  useEffect(() => {
+    if (!token) {
+      localStorage.clear();
+      navigate("/login", { replace: true });
+    }
+  }, [token, navigate]);
 
   const feedbackCriteriaByType = {
     semester: [
@@ -125,6 +133,7 @@ export default function StudentDashboard() {
 
   const fetchNotifications = useCallback(async () => {
     try {
+      if (!token) return;
       const res = await fetch(`${BASE_URL}/api/students/notifications/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -138,6 +147,7 @@ export default function StudentDashboard() {
 
   const fetchCount = useCallback(async () => {
     try {
+      if (!token) return;
       const res = await fetch(`${BASE_URL}/api/students/notification-count/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -151,6 +161,7 @@ export default function StudentDashboard() {
 
   const fetchAttendancePercentage = useCallback(async () => {
     try {
+      if (!token) return;
       const res = await fetch(`${BASE_URL}/api/students/attendance-percentage/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -165,6 +176,7 @@ export default function StudentDashboard() {
   const fetchFeedbackForms = useCallback(async () => {
     if (!selectedSemester) return;
     try {
+      if (!token) return;
       const res = await fetch(`${BASE_URL}/api/students/feedback-forms/?semester=${selectedSemester}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -211,6 +223,7 @@ export default function StudentDashboard() {
       if (year) params.set("year", year);
       if (section) params.set("section", section);
 
+      if (!token) return;
       const res = await fetch(
         `${BASE_URL}/api/students/available-faculties/${params.toString() ? `?${params.toString()}` : ""}`,
         { headers: { Authorization: `Bearer ${token}` } }
@@ -364,6 +377,10 @@ export default function StudentDashboard() {
       await fetchNotifications();
     }
     try {
+      if (!token) {
+        navigate("/login", { replace: true });
+        return;
+      }
       await fetch(`${BASE_URL}/api/students/mark-read/`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },

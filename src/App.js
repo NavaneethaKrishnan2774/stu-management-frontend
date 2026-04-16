@@ -11,6 +11,13 @@ import HODLogin from "./pages/HODLogin";
 import StudentDashboard from "./pages/StudentDashboard";
 import StaffDashboard from "./pages/StaffDashboard";
 import HODDashboard from "./pages/HODDashboard";
+import HODStudents from "./pages/HODStudents";
+import HODStaff from "./pages/HODStaff";
+import HODLowAttendance from "./pages/HODLowAttendance";
+import HODNotifications from "./pages/HODNotifications";
+import HODAnalytics from "./pages/HODAnalytics";
+import HODTimetable from "./pages/HODTimetable";
+import HODRoute from "./components/HODRoute";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminLogin from "./pages/AdminLogin";
 import AdminRegister from "./pages/AdminRegister";
@@ -43,9 +50,15 @@ function App() {
         <Route path="/staff/register" element={<StaffRegister />} />
         <Route path="/staff/dashboard" element={<StaffDashboard />} />
         <Route path="/hod/login" element={<HODLogin />} />
-        <Route path="/hod/dashboard" element={<HODDashboard />} />
+        <Route path="/hod/dashboard" element={<HODRoute><HODDashboard /></HODRoute>} />
+        <Route path="/hod/students" element={<HODRoute><HODStudents /></HODRoute>} />
+        <Route path="/hod/staff" element={<HODRoute><HODStaff /></HODRoute>} />
+        <Route path="/hod/low-attendance" element={<HODRoute><HODLowAttendance /></HODRoute>} />
+        <Route path="/hod/notifications" element={<HODRoute><HODNotifications /></HODRoute>} />
+        <Route path="/hod/analytics" element={<HODRoute><HODAnalytics /></HODRoute>} />
+        <Route path="/hod/timetables" element={<HODRoute><HODTimetable /></HODRoute>} />
         <Route path="/staff/comments/:category" element={<FeedbackComments />} />
-        <Route path="/hod/comments/:category" element={<FeedbackComments />} />
+        <Route path="/hod/comments/:category" element={<HODRoute><FeedbackComments /></HODRoute>} />
 
         {/* Admin routes */}
         <Route path="/admin/login" element={<AdminLogin />} />

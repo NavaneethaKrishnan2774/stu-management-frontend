@@ -16,21 +16,27 @@ export default function HODLogin() {
         designation,
       });
 
-      const { access, role, department, year, section } = res;
+      const { access, role, designation: returnedDesignation, department, year, section } = res;
       if (!access) {
         alert("Invalid login");
         return;
       }
 
+      const storedDesignation = returnedDesignation || designation;
+      const normalizedRole = (role || "").toLowerCase();
+      const normalizedDesignation = (storedDesignation || "").toLowerCase();
+      const isHod = normalizedRole === "hod" || normalizedDesignation === "hod";
+
       localStorage.setItem("token", access);
       localStorage.setItem("role", role);
+      localStorage.setItem("designation", storedDesignation);
       localStorage.setItem("department", department);
       localStorage.setItem("year", year);
       localStorage.setItem("section", section);
 
-      if (role === "hod") navigate("/hod/dashboard");
-      else if (role === "staff") navigate("/staff/dashboard");
-      else if (role === "admin") navigate("/admin/dashboard");
+      if (isHod) navigate("/hod/dashboard");
+      else if (normalizedRole === "staff") navigate("/staff/dashboard");
+      else if (normalizedRole === "admin") navigate("/admin/dashboard");
       else navigate("/");
     } catch (err) {
       console.error(err);
