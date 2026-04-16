@@ -33,6 +33,7 @@ export default function HODTimetable() {
   const [editingId, setEditingId] = useState(null);
   const [editedRow, setEditedRow] = useState({});
   const [commentById, setCommentById] = useState({});
+  const [selectedEntryId, setSelectedEntryId] = useState(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -73,7 +74,10 @@ export default function HODTimetable() {
           entries: [],
         };
       }
-      groups[groupKey].entries.push(item);
+      const alreadyAdded = groups[groupKey].entries.some((existing) => existing.id === item.id);
+      if (!alreadyAdded) {
+        groups[groupKey].entries.push(item);
+      }
       return groups;
     }, {});
   }, [timetables]);
@@ -86,6 +90,27 @@ export default function HODTimetable() {
       return String(a.semester).localeCompare(String(b.semester));
     });
   }, [classGroups]);
+
+  const yearGroups = useMemo(() => {
+    return Object.values(sortedGroups.reduce((acc, group) => {
+      const key = `${group.department || ''}|${group.year || ''}|${group.semester || ''}`;
+      if (!acc[key]) {
+        acc[key] = {
+          id: key,
+          department: group.department,
+          year: group.year,
+          semester: group.semester,
+          classes: [],
+        };
+      }
+      acc[key].classes.push(group);
+      return acc;
+    }, {}));
+  }, [sortedGroups]);
+
+  const selectedEntry = useMemo(() => {
+    return timetables.find((item) => item.id === selectedEntryId) || null;
+  }, [selectedEntryId, timetables]);
 
   const getTimeOrder = (time) => {
     const index = TIME_ORDER.indexOf(time);
@@ -111,14 +136,8 @@ export default function HODTimetable() {
 
     if (editingId === id) {
       Object.assign(body, {
-        subject_code: editedRow.subject_code,
-        subject: editedRow.subject,
         faculty: editedRow.faculty,
         faculty_id: editedRow.faculty_id,
-        day: editedRow.day,
-        time: editedRow.time,
-        period: editedRow.period,
-        semester: editedRow.semester,
         hod_comment: commentById[id],
       });
     }
@@ -132,14 +151,8 @@ export default function HODTimetable() {
         approval_status: 'approved',
         approved_by: 'You',
         hod_comment: commentById[id] || item.hod_comment,
-        subject: body.subject || item.subject,
-        subject_code: body.subject_code || item.subject_code,
         faculty: body.faculty || item.faculty,
         faculty_id: body.faculty_id || item.faculty_id,
-        day: body.day || item.day,
-        time: body.time || item.time,
-        period: body.period || item.period,
-        semester: body.semester || item.semester,
       } : item));
       setEditingId(null);
       setEditedRow({});
@@ -149,16 +162,11 @@ export default function HODTimetable() {
   };
 
   const startEdit = (item) => {
+    setSelectedEntryId(item.id);
     setEditingId(item.id);
     setEditedRow({
-      subject_code: item.subject_code || "",
-      subject: item.subject || "",
       faculty: item.faculty || "",
       faculty_id: item.faculty_id || "",
-      day: item.day || "",
-      time: item.time || "",
-      period: item.period || "",
-      semester: item.semester || "",
     });
     setCommentById((prev) => ({ ...prev, [item.id]: item.hod_comment || "" }));
     setActionMessage(null);
@@ -184,28 +192,16 @@ export default function HODTimetable() {
 
     try {
       await API.put(`api/students/hod/update-timetable/${id}/`, {
-        subject_code: editedRow.subject_code,
-        subject: editedRow.subject,
         faculty: editedRow.faculty,
         faculty_id: editedRow.faculty_id,
-        day: editedRow.day,
-        time: editedRow.time,
-        period: editedRow.period,
-        semester: editedRow.semester,
         hod_comment: commentById[id],
         approval_status: 'under_review',
       }, token);
-      setActionMessage("Timetable changes saved and marked under review.");
+      setActionMessage("Faculty change suggested and timetable sent back to faculty.");
       setTimetables((prev) => prev.map((item) => item.id === id ? {
         ...item,
-        subject_code: editedRow.subject_code,
-        subject: editedRow.subject,
         faculty: editedRow.faculty,
         faculty_id: editedRow.faculty_id,
-        day: editedRow.day,
-        time: editedRow.time,
-        period: editedRow.period,
-        semester: editedRow.semester,
         approval_status: 'under_review',
         is_approved: false,
         hod_comment: commentById[id],
@@ -276,80 +272,16 @@ export default function HODTimetable() {
       return <div style={cellEmpty}>No class</div>;
     }
 
-    const isEditing = editingId === entry.id;
-    const facultySelect = (
-      <select
-        value={editedRow.faculty_id || ""}
-        onChange={(e) => {
-          const selected = facultyOptions.find((faculty) => String(faculty.id) === String(e.target.value));
-          handleEditedChange('faculty_id', e.target.value);
-          handleEditedChange('faculty', selected ? selected.full_name || selected.username : '');
-        }}
-        style={selectStyle}
-      >
-        <option value="">Select Faculty</option>
-        {facultyOptions.map((faculty) => {
-          const label = `${faculty.full_name || faculty.username}${faculty.designation ? ` — ${faculty.designation}` : ''}`;
-          return (
-            <option key={faculty.id} value={faculty.id}>
-              {label}
-            </option>
-          );
-        })}
-      </select>
-    );
-
     return (
-      <div style={cellContainer}>
+      <div
+        style={{
+          ...cellContainer,
+          border: selectedEntryId === entry.id ? '1px solid #1976d2' : '1px solid transparent',
+        }}
+      >
         <div style={cellHeader}>
-          <strong>{entry.subject_code || '-'}</strong>
           <span>{entry.subject || 'No Subject'}</span>
         </div>
-        <div style={cellInfo}>
-          <span style={{ fontWeight: 600 }}>Faculty:</span> {entry.faculty || 'Unassigned'}
-        </div>
-        {isEditing ? (
-          <div style={{ marginTop: '8px' }}>
-            <label style={labelStyle}>Faculty in charge</label>
-            {facultySelect}
-            <textarea
-              rows={2}
-              value={commentById[entry.id] || ''}
-              onChange={(e) => setCommentById((prev) => ({ ...prev, [entry.id]: e.target.value }))}
-              placeholder="HOD note"
-              style={textareaStyle}
-            />
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
-              <button style={buttonStyle} onClick={() => saveEdit(entry.id)}>
-                Save
-              </button>
-              <button style={{ ...buttonStyle, backgroundColor: '#777' }} onClick={cancelEdit}>
-                Cancel
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
-            <button
-              style={buttonStyle}
-              onClick={() => startEdit(entry)}
-              disabled={entry.approval_status === 'approved' || entry.is_approved}
-            >
-              Assign / Edit
-            </button>
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              <button style={{ ...buttonStyle, backgroundColor: '#4CAF50' }} onClick={() => approveEntry(entry.id)}>
-                Approve
-              </button>
-              <button style={{ ...buttonStyle, backgroundColor: '#FFA000' }} onClick={() => requestRework(entry.id)}>
-                Rework
-              </button>
-              <button style={{ ...buttonStyle, backgroundColor: '#f44336' }} onClick={() => rejectEntry(entry.id)}>
-                Reject
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     );
   };
@@ -376,98 +308,195 @@ export default function HODTimetable() {
         </div>
       )}
 
-      {!loading && !error && sortedGroups.map((group) => {
-        const times = buildTimesForGroup(group.entries);
-        const faculties = Array.from(new Set(group.entries.map((item) => item.faculty).filter(Boolean)));
-        const subjectDetails = Object.values(group.entries.reduce((acc, entry) => {
-          const key = entry.subject_code || entry.subject || `subject-${entry.id}`;
-          if (!acc[key]) {
-            acc[key] = {
-              subject_code: entry.subject_code || 'N/A',
-              abbreviation: getSubjectAbbreviation(entry),
-              subject_title: entry.subject || 'N/A',
-              credits: entry.credits != null ? entry.credits : '-',
-              periods_per_week: 0,
-              faculty: entry.faculty || 'Unassigned',
-            };
-          }
-          acc[key].periods_per_week += 1;
-          return acc;
-        }, {}));
+      {!loading && !error && yearGroups.map((yearGroup) => (
+        <div key={yearGroup.id} style={{ marginBottom: '34px' }}>
+          <div style={{ marginBottom: '18px' }}>
+            <h2 style={{ margin: 0 }}>Year: {yearGroup.year || 'N/A'} — {yearGroup.department || 'N/A'}</h2>
+            <p style={{ margin: '6px 0 0', color: '#555' }}>
+              Semester: {yearGroup.semester || 'N/A'}
+            </p>
+          </div>
 
-        return (
-          <section key={group.id} style={groupCard}>
-            <div style={groupHeader}>
-              <div>
-                <h2 style={{ margin: 0 }}>Class: {group.department || 'N/A'} {group.year || 'N/A'} - {group.section || 'N/A'}</h2>
-                <p style={{ margin: '8px 0 0', color: '#555' }}>
-                  Semester: {group.semester || 'N/A'} | Faculty: {faculties.length ? faculties.join(', ') : 'Unassigned'}
-                </p>
-              </div>
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
-                <span style={statBadge}>Year: {group.year || 'N/A'}</span>
-                <span style={statBadge}>Section: {group.section || 'N/A'}</span>
-                <span style={statBadge}>Semester: {group.semester || 'N/A'}</span>
-              </div>
-            </div>
+          {yearGroup.classes.map((group) => {
+            const times = TIME_ORDER;
+            const faculties = Array.from(new Set(group.entries.map((item) => item.faculty).filter(Boolean)));
+            const subjectDetails = Object.values(group.entries.reduce((acc, entry) => {
+              const key = entry.subject_code || entry.subject || `subject-${entry.id}`;
+              if (!acc[key]) {
+                acc[key] = {
+                  subject_code: entry.subject_code || 'N/A',
+                  abbreviation: getSubjectAbbreviation(entry),
+                  subject_title: entry.subject || 'N/A',
+                  credits: entry.credits != null ? entry.credits : '-',
+                  periods_per_week: 0,
+                  faculty: entry.faculty || 'Unassigned',
+                  entry,
+                };
+              }
+              acc[key].periods_per_week += 1;
+              return acc;
+            }, {}));
 
-            <div style={{ overflowX: 'auto' }}>
-              <table style={matrixTable}>
-                <thead>
-                  <tr>
-                    <th style={matrixHeader}>Day</th>
-                    {times.map((time) => (
-                      <th key={time} style={matrixHeader}>{time}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {DAY_ORDER.map((day) => (
-                    <tr key={day}>
-                      <td style={matrixCell}>{day}</td>
-                      {times.map((time) => {
-                        const entry = group.entries.find((item) => item.day === day && item.time === time);
+            const canManageSelected = selectedEntry && selectedEntry.department === group.department && selectedEntry.year === group.year && selectedEntry.section === group.section && selectedEntry.semester === group.semester;
+            return (
+              <section key={group.id} style={groupCard}>
+                <div style={groupHeader}>
+                  <div>
+                    <h3 style={{ margin: 0 }}>Class: {group.department || 'N/A'}-{group.section || 'N/A'}</h3>
+                    <p style={{ margin: '8px 0 0', color: '#555' }}>Year: {group.year || 'N/A'}</p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center', textAlign: 'right' }}>
+                    <div>
+                      <p style={{ margin: 0, fontWeight: 600 }}>Semester</p>
+                      <p style={{ margin: '4px 0 0', color: '#555' }}>{group.semester || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p style={{ margin: 0, fontWeight: 600 }}>Faculty</p>
+                      <p style={{ margin: '4px 0 0', color: '#555' }}>{faculties.length ? faculties.join(', ') : 'Unassigned'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '16px' }}>
+                  <div>
+                    <span style={{ fontWeight: 600 }}>Selected:</span>{' '}
+                    {canManageSelected ? `${selectedEntry.subject || 'No subject selected'} (${selectedEntry.day || ''} ${selectedEntry.time || selectedEntry.period || ''})` : 'Select a class entry from the list below.'}
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                    <button style={{ ...buttonStyle, minWidth: '120px' }} onClick={() => approveEntry(selectedEntry?.id)} disabled={!canManageSelected}>
+                      Approve
+                    </button>
+                    <button style={{ ...buttonStyle, backgroundColor: '#FFA000', minWidth: '120px' }} onClick={() => requestRework(selectedEntry?.id)} disabled={!canManageSelected}>
+                      Rework
+                    </button>
+                    <button style={{ ...buttonStyle, backgroundColor: '#f44336', minWidth: '120px' }} onClick={() => rejectEntry(selectedEntry?.id)} disabled={!canManageSelected}>
+                      Reject
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={matrixTable}>
+                    <thead>
+                      <tr>
+                        <th style={matrixHeader}>Day</th>
+                        {times.map((time, index) => (
+                          <th key={time} style={matrixHeader}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                              <span style={{ fontWeight: 700 }}> {index + 1} </span>
+                              <span style={{ fontSize: '12px', color: '#555' }}>{time}</span>
+                            </div>
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {DAY_ORDER.map((day) => (
+                        <tr key={day}>
+                          <td style={matrixCell}>{day}</td>
+                          {times.map((time) => {
+                            const entry = group.entries.find((item) => item.day === day && item.time === time);
+                            return (
+                              <td key={`${day}-${time}`} style={matrixCell}>
+                                {renderCell(entry)}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div style={{ overflowX: 'auto', marginTop: '18px' }}>
+                  <table style={detailsTable}>
+                    <thead>
+                      <tr>
+                        <th style={detailsHeader}>Subject Code</th>
+                        <th style={detailsHeader}>Abbreviation</th>
+                        <th style={detailsHeader}>Subject Title</th>
+                        <th style={detailsHeader}>Credits</th>
+                        <th style={detailsHeader}>Periods / Week</th>
+                        <th style={detailsHeader}>Faculty in Charge</th>
+                        <th style={detailsHeader}>Suggestion</th>
+                        <th style={detailsHeader}>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {subjectDetails.map((detail) => {
+                        const isRowEditing = editingId === detail.entry.id;
                         return (
-                          <td key={`${day}-${time}`} style={matrixCell}>
-                            {renderCell(entry)}
-                          </td>
+                          <tr key={`${detail.subject_code}-${detail.subject_title}`}>
+                            <td style={detailsCell}>{detail.subject_code}</td>
+                            <td style={detailsCell}>{detail.abbreviation}</td>
+                            <td style={detailsCell}>{detail.subject_title}</td>
+                            <td style={detailsCell}>{detail.credits}</td>
+                            <td style={detailsCell}>{detail.periods_per_week}</td>
+                            <td style={detailsCell}>
+                              {isRowEditing ? (
+                                <select
+                                  value={editedRow.faculty_id || ''}
+                                  onChange={(e) => {
+                                    const selected = facultyOptions.find((faculty) => String(faculty.id) === String(e.target.value));
+                                    handleEditedChange('faculty_id', e.target.value);
+                                    handleEditedChange('faculty', selected ? selected.full_name || selected.username : '');
+                                  }}
+                                  style={selectStyle}
+                                >
+                                  <option value="">Select Faculty</option>
+                                  {facultyOptions.map((faculty) => {
+                                    const label = `${faculty.full_name || faculty.username}${faculty.designation ? ` — ${faculty.designation}` : ''}`;
+                                    return (
+                                      <option key={faculty.id} value={faculty.id}>
+                                        {label}
+                                      </option>
+                                    );
+                                  })}
+                                </select>
+                              ) : (
+                                detail.faculty || 'Unassigned'
+                              )}
+                            </td>
+                            <td style={detailsCell}>
+                              {isRowEditing ? (
+                                <textarea
+                                  rows={2}
+                                  value={commentById[detail.entry.id] || ''}
+                                  onChange={(e) => setCommentById((prev) => ({ ...prev, [detail.entry.id]: e.target.value }))}
+                                  placeholder="Add suggestion"
+                                  style={{ ...textareaStyle, minHeight: '60px', margin: 0 }}
+                                />
+                              ) : (
+                                commentById[detail.entry.id] || detail.entry.hod_comment || 'No suggestion'
+                              )}
+                            </td>
+                            <td style={detailsCell}>
+                              {isRowEditing ? (
+                                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                  <button style={buttonStyle} onClick={() => saveEdit(detail.entry.id)}>
+                                    Save
+                                  </button>
+                                  <button style={{ ...buttonStyle, backgroundColor: '#777' }} onClick={cancelEdit}>
+                                    Cancel
+                                  </button>
+                                </div>
+                              ) : (
+                                <button style={buttonStyle} onClick={() => startEdit(detail.entry)}>
+                                  Edit
+                                </button>
+                              )}
+                            </td>
+                          </tr>
                         );
                       })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div style={{ overflowX: 'auto', marginTop: '18px' }}>
-              <table style={detailsTable}>
-                <thead>
-                  <tr>
-                    <th style={detailsHeader}>Subject Code</th>
-                    <th style={detailsHeader}>Abbreviation</th>
-                    <th style={detailsHeader}>Subject Title</th>
-                    <th style={detailsHeader}>Credits</th>
-                    <th style={detailsHeader}>Periods / Week</th>
-                    <th style={detailsHeader}>Faculty in Charge</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {subjectDetails.map((detail) => (
-                    <tr key={`${detail.subject_code}-${detail.subject_title}`}>
-                      <td style={detailsCell}>{detail.subject_code}</td>
-                      <td style={detailsCell}>{detail.abbreviation}</td>
-                      <td style={detailsCell}>{detail.subject_title}</td>
-                      <td style={detailsCell}>{detail.credits}</td>
-                      <td style={detailsCell}>{detail.periods_per_week}</td>
-                      <td style={detailsCell}>{detail.faculty}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        );
-      })}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            );
+          })}
+        </div>
+      ))}
     </div>
   );
 }
@@ -514,11 +543,12 @@ const matrixHeader = {
 };
 
 const matrixCell = {
-  verticalAlign: 'top',
-  padding: '12px',
+  verticalAlign: 'middle',
+  padding: '8px 10px',
   borderBottom: '1px solid #e5e7eb',
   borderRight: '1px solid #e5e7eb',
-  minWidth: '220px',
+  minWidth: '180px',
+  height: '60px',
 };
 
 const detailsTable = {
@@ -546,11 +576,14 @@ const detailsCell = {
 const cellContainer = {
   display: 'flex',
   flexDirection: 'column',
-  gap: '8px',
-  padding: '10px',
+  justifyContent: 'center',
+  alignItems: 'flex-start',
+  gap: '4px',
+  padding: '6px 8px',
   backgroundColor: '#fefefe',
-  borderRadius: '12px',
-  minHeight: '170px',
+  borderRadius: '10px',
+  minHeight: '48px',
+  maxHeight: '60px',
 };
 
 const cellHeader = {
