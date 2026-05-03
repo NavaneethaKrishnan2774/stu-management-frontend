@@ -40,7 +40,7 @@ export default function PlacementOfficerDashboard() {
   const menuItems = [
     {
       title: "Placement Drives",
-      description: "View and manage placement drives",
+      description: "View and manage placement drives with filters",
       icon: "📋",
       color: "#e3f2fd",
       borderColor: "#2196f3",

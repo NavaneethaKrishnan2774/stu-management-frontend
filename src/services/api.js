@@ -121,13 +121,28 @@ const API = {
     return data;
   },
 
-  get: async (endpoint, token) => {
+  get: async (endpoint, params, token) => {
     const headers = {};
     const normalizedToken = normalizeToken(token);
     if (normalizedToken) {
       headers.Authorization = `Bearer ${normalizedToken}`;
     }
-    const res = await fetch(`${BASE_URL}${endpoint}`, {
+
+    // Build query string from params if provided
+    let url = `${BASE_URL}${endpoint}`;
+    if (params && typeof params === 'object') {
+      const queryParams = new URLSearchParams();
+      Object.keys(params).forEach(key => {
+        if (params[key] !== null && params[key] !== undefined) {
+          queryParams.append(key, params[key]);
+        }
+      });
+      if (queryParams.toString()) {
+        url += `?${queryParams.toString()}`;
+      }
+    }
+
+    const res = await fetch(url, {
       headers,
     });
 
