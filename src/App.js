@@ -7,6 +7,7 @@ import StudentRegister from "./pages/StudentRegister";
 import StaffRoleSelection from "./pages/StaffRoleSelection";
 import StaffLogin from "./pages/StaffLogin";
 import StaffRegister from "./pages/StaffRegister";
+import StaffRegistrationStatus from "./pages/StaffRegistrationStatus";
 import HODLogin from "./pages/HODLogin";
 import StudentDashboard from "./pages/StudentDashboard";
 import StaffDashboard from "./pages/StaffDashboard";
@@ -17,11 +18,20 @@ import HODLowAttendance from "./pages/HODLowAttendance";
 import HODNotifications from "./pages/HODNotifications";
 import HODAnalytics from "./pages/HODAnalytics";
 import HODTimetable from "./pages/HODTimetable";
+import HODPlacementDrives from "./pages/HODPlacementDrives";
 import HODRoute from "./components/HODRoute";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminLogin from "./pages/AdminLogin";
 import AdminRegister from "./pages/AdminRegister";
+import AdminStaffRegistrations from "./pages/AdminStaffRegistrations";
 import FeedbackComments from "./pages/FeedbackComments";
+
+// Placement Officer imports
+import PlacementOfficerDashboard from "./pages/PlacementOfficerDashboard";
+import PlacementStudents from "./pages/PlacementStudents";
+import PlacementCreateDrive from "./pages/PlacementCreateDrive";
+import PlacementDrives from "./pages/PlacementDrives";
+import PlacementOfficerRoute from "./components/PlacementOfficerRoute";
 
 // import modules
 import Academic from "./pages/Academic";
@@ -48,6 +58,7 @@ function App() {
         <Route path="/staff/roles" element={<StaffRoleSelection />} />
         <Route path="/staff/login" element={<StaffLogin />} />
         <Route path="/staff/register" element={<StaffRegister />} />
+        <Route path="/staff/register/status" element={<StaffRegistrationStatus />} />
         <Route path="/staff/dashboard" element={<StaffDashboard />} />
         <Route path="/hod/login" element={<HODLogin />} />
         <Route path="/hod/dashboard" element={<HODRoute><HODDashboard /></HODRoute>} />
@@ -57,6 +68,7 @@ function App() {
         <Route path="/hod/notifications" element={<HODRoute><HODNotifications /></HODRoute>} />
         <Route path="/hod/analytics" element={<HODRoute><HODAnalytics /></HODRoute>} />
         <Route path="/hod/timetables" element={<HODRoute><HODTimetable /></HODRoute>} />
+        <Route path="/hod/placement-drives" element={<HODRoute><HODPlacementDrives /></HODRoute>} />
         <Route path="/staff/comments/:category" element={<FeedbackComments />} />
         <Route path="/hod/comments/:category" element={<HODRoute><FeedbackComments /></HODRoute>} />
 
@@ -64,6 +76,13 @@ function App() {
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/register" element={<AdminRegister />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/staff-registrations" element={<AdminStaffRegistrations />} />
+
+        {/* Placement Officer routes */}
+        <Route path="/placement/dashboard" element={<PlacementOfficerRoute><PlacementOfficerDashboard /></PlacementOfficerRoute>} />
+        <Route path="/placement/students/:department" element={<PlacementOfficerRoute><PlacementStudents /></PlacementOfficerRoute>} />
+        <Route path="/placement/create-drive" element={<PlacementOfficerRoute><PlacementCreateDrive /></PlacementOfficerRoute>} />
+        <Route path="/placement/drives" element={<PlacementOfficerRoute><PlacementDrives /></PlacementOfficerRoute>} />
 
         {/* ✅ ADD MODULE ROUTES HERE */}
         <Route path="/academics" element={<Academic />} />

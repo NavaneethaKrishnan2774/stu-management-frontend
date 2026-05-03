@@ -61,13 +61,13 @@ export default function StaffDashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!token || userRole !== "staff" || (designation !== "faculty_fa" && designation !== "faculty_subject")) {
+    if (!token || userRole !== "staff") {
       localStorage.removeItem("token");
       localStorage.removeItem("role");
       localStorage.removeItem("designation");
       navigate("/staff/roles");
     }
-  }, [token, userRole, designation, navigate]);
+  }, [token, userRole, navigate]);
 
   useEffect(() => {
     if (isFacultyFA) {

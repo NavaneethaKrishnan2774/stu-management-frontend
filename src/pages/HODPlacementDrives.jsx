@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import API from "../services/api";
 
-export default function Development() {
+export default function HODPlacementDrives() {
   const [drives, setDrives] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -14,8 +14,8 @@ export default function Development() {
       return;
     }
 
-    // Get placement drives for student's department
-    API.get("api/students/student/placement-drives/", token)
+    // Get placement drives for HOD's department
+    API.get("api/students/hod/placement-drives/", token)
       .then((data) => setDrives(data))
       .catch((err) => setError(err?.message || "Unable to load placement drives."))
       .finally(() => setLoading(false));
@@ -24,8 +24,8 @@ export default function Development() {
   return (
     <div style={{ padding: "24px", maxWidth: "1200px", margin: "auto" }}>
       <div style={{ marginBottom: "24px" }}>
-        <h1>Development Module - Placement Drives</h1>
-        <p>View placement drives and your application status for your department.</p>
+        <h1>Placement Drives</h1>
+        <p>View placement drives and shortlisted students for your department.</p>
       </div>
 
       {loading && <p>Loading placement drives...</p>}
@@ -34,7 +34,7 @@ export default function Development() {
       {!loading && !error && (
         <div style={{ display: "grid", gap: "20px" }}>
           {drives.length === 0 ? (
-            <p>No placement drives available for your department.</p>
+            <p>No placement drives found for your department.</p>
           ) : (
             drives.map((drive) => (
               <div
@@ -58,21 +58,12 @@ export default function Development() {
                     </p>
                   </div>
                   <div style={{ textAlign: "right" }}>
-                    <div style={{
-                      padding: "8px 16px",
-                      borderRadius: "20px",
-                      fontSize: "14px",
-                      fontWeight: "bold",
-                      color: "white",
-                      backgroundColor:
-                        drive.my_status === 'placed' ? '#27ae60' :
-                        drive.my_status === 'applied' ? '#f39c12' :
-                        drive.my_status === 'shortlisted' ? '#3498db' : '#95a5a6'
-                    }}>
-                      {drive.my_status === 'placed' ? '✓ Placed' :
-                       drive.my_status === 'applied' ? 'Applied' :
-                       drive.my_status === 'shortlisted' ? 'Shortlisted' : 'Not Applied'}
-                    </div>
+                    <p style={{ margin: "0", fontSize: "18px", fontWeight: "bold", color: "#27ae60" }}>
+                      {drive.shortlisted_count} Shortlisted
+                    </p>
+                    <p style={{ margin: "0", fontSize: "14px", color: "#7f8c8d" }}>
+                      {drive.placed_count} Placed
+                    </p>
                   </div>
                 </div>
 
@@ -109,32 +100,14 @@ export default function Development() {
                 )}
 
                 <div style={{ marginTop: "16px" }}>
-                  <h3 style={{ margin: "0 0 12px 0", fontSize: "16px" }}>Drive Information:</h3>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "12px" }}>
-                    <div style={{ textAlign: "center", padding: "12px", backgroundColor: "#f8f9fa", borderRadius: "8px" }}>
-                      <div style={{ fontSize: "24px", fontWeight: "bold", color: "#3498db" }}>{drive.total_applied}</div>
-                      <div style={{ fontSize: "12px", color: "#7f8c8d" }}>Applied</div>
-                    </div>
-                    <div style={{ textAlign: "center", padding: "12px", backgroundColor: "#f8f9fa", borderRadius: "8px" }}>
-                      <div style={{ fontSize: "24px", fontWeight: "bold", color: "#e74c3c" }}>{drive.total_shortlisted}</div>
-                      <div style={{ fontSize: "12px", color: "#7f8c8d" }}>Shortlisted</div>
-                    </div>
-                    <div style={{ textAlign: "center", padding: "12px", backgroundColor: "#f8f9fa", borderRadius: "8px" }}>
-                      <div style={{ fontSize: "24px", fontWeight: "bold", color: "#27ae60" }}>{drive.total_placed}</div>
-                      <div style={{ fontSize: "12px", color: "#7f8c8d" }}>Placed</div>
-                    </div>
-                  </div>
-                </div>
-
-                {drive.attendees && drive.attendees.length > 0 && (
-                  <div style={{ marginTop: "16px" }}>
-                    <h3 style={{ margin: "0 0 12px 0", fontSize: "16px" }}>Who is Attending:</h3>
+                  <h3 style={{ margin: "0 0 12px 0", fontSize: "16px" }}>Shortlisted Students:</h3>
+                  {drive.shortlisted_students && drive.shortlisted_students.length > 0 ? (
                     <div style={{
                       display: "grid",
-                      gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
+                      gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
                       gap: "8px"
                     }}>
-                      {drive.attendees.map((student) => (
+                      {drive.shortlisted_students.map((student) => (
                         <div
                           key={student.id}
                           style={{
@@ -147,20 +120,22 @@ export default function Development() {
                         >
                           <div style={{ fontWeight: "bold" }}>{student.name}</div>
                           <div style={{ color: "#666", fontSize: "12px" }}>
-                            {student.register_number}
+                            {student.register_number} • CGPA: {student.cgpa || 'N/A'}
                           </div>
                           <div style={{
                             color: student.status === 'placed' ? "#155724" : "#856404",
                             fontSize: "12px",
                             fontWeight: "bold"
                           }}>
-                            {student.status === 'placed' ? '✓ Placed' : 'Attending'}
+                            {student.status === 'placed' ? '✓ Placed' : 'Shortlisted'}
                           </div>
                         </div>
                       ))}
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <p style={{ color: "#7f8c8d", fontStyle: "italic" }}>No students shortlisted yet.</p>
+                  )}
+                </div>
               </div>
             ))
           )}

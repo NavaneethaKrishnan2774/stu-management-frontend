@@ -736,12 +736,12 @@ export default function StudentDashboard() {
               <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '850px' }}>
                 <thead>
                   <tr style={{ backgroundColor: '#f9fafb' }}>
-                    <th style={detailsHeader}>Subject Code</th>
-                    <th style={detailsHeader}>Abbreviation</th>
-                    <th style={detailsHeader}>Subject Title</th>
-                    <th style={detailsHeader}>Credits</th>
-                    <th style={detailsHeader}>Periods / Week</th>
-                    <th style={detailsHeader}>Faculty in Charge</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', borderBottom: '1px solid #e5e7eb' }}>Subject Code</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', borderBottom: '1px solid #e5e7eb' }}>Abbreviation</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', borderBottom: '1px solid #e5e7eb' }}>Subject Title</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', borderBottom: '1px solid #e5e7eb' }}>Credits</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', borderBottom: '1px solid #e5e7eb' }}>Periods / Week</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', borderBottom: '1px solid #e5e7eb' }}>Faculty in Charge</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -754,12 +754,12 @@ export default function StudentDashboard() {
                     ).length;
                     return (
                       <tr key={`${subject.subject_code}-${subject.subject}`}>
-                        <td style={detailsCell}>{subject.subject_code || 'N/A'}</td>
-                        <td style={detailsCell}>{subject.subject_code || subject.subject}</td>
-                        <td style={detailsCell}>{subject.subject || 'N/A'}</td>
-                        <td style={detailsCell}>{entry?.credits ?? '-'}</td>
-                        <td style={detailsCell}>{periods}</td>
-                        <td style={detailsCell}>{entry?.faculty || 'Unassigned'}</td>
+                        <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>{subject.subject_code || 'N/A'}</td>
+                        <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>{subject.subject_code || subject.subject}</td>
+                        <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>{subject.subject || 'N/A'}</td>
+                        <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>{entry?.credits ?? '-'}</td>
+                        <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>{periods}</td>
+                        <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>{entry?.faculty || 'Unassigned'}</td>
                       </tr>
                     );
                   })}

@@ -47,6 +47,12 @@ export default function HODDashboard() {
       link: "/hod/low-attendance?type=staff",
     },
     {
+      title: "Placement Drives",
+      value: overview?.placement_drives_count ?? "--",
+      description: `${overview?.shortlisted_students_count ?? 0} students shortlisted for placement drives`,
+      link: "/hod/placement-drives",
+    },
+    {
       title: "Notifications",
       value: "Manage",
       description: "Create, review, and control department notifications",

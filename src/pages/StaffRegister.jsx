@@ -4,12 +4,32 @@ import API from "../services/api";
 
 const departments = ["CSE", "ECE", "MECH", "CIVIL", "EEE", "MECHANICAL"];
 const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+const roles = [
+  "hod",
+  "faculty_fa",
+  "faculty_subject",
+  "librarian",
+  "placement_officer",
+  "association_advisor",
+  "hostel_warden",
+];
+
+const roleLabels = {
+  hod: "HOD",
+  faculty_fa: "Faculty (FA)",
+  faculty_subject: "Faculty (Subject Holder)",
+  librarian: "Librarian",
+  placement_officer: "Placement Officer",
+  association_advisor: "Association Advisor",
+  hostel_warden: "Hostel Warden",
+};
 
 export default function StaffRegister() {
   const [name, setName] = useState("");
   const [dob, setDob] = useState("");
   const [age, setAge] = useState("");
   const [department, setDepartment] = useState(departments[0]);
+  const [role, setRole] = useState(roles[0]);
   const [mobile, setMobile] = useState("");
   const [idNumber, setIdNumber] = useState("");
   const [joiningYear, setJoiningYear] = useState(new Date().getFullYear().toString());
@@ -38,7 +58,7 @@ export default function StaffRegister() {
   };
 
   const handleSubmit = async () => {
-    if (!name || !dob || !idNumber || !email || !password) {
+    if (!name || !dob || !idNumber || !email || !password || !role) {
       alert("Please fill in all required fields.");
       return;
     }
@@ -49,6 +69,7 @@ export default function StaffRegister() {
         dob,
         age,
         department,
+        designation: role,
         mobile,
         id_number: idNumber,
         joining_year: joiningYear,
@@ -64,8 +85,7 @@ export default function StaffRegister() {
       });
 
       if (res?.success || res?.id) {
-        alert("Staff registration successful. Please login.");
-        navigate("/staff/login");
+        navigate(`/staff/register/status?email=${encodeURIComponent(email)}`);
       } else {
         alert(res?.detail || "Registration failed. Please try again.");
       }
@@ -104,6 +124,16 @@ export default function StaffRegister() {
             {departments.map((dept) => (
               <option key={dept} value={dept}>
                 {dept}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Role
+          <select style={{ width: "100%", padding: "10px" }} value={role} onChange={(e) => setRole(e.target.value)}>
+            {roles.map((roleValue) => (
+              <option key={roleValue} value={roleValue}>
+                {roleLabels[roleValue] || roleValue.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
               </option>
             ))}
           </select>

@@ -27,10 +27,9 @@ export default function StaffLogin() {
       const res = await API.post("api/login/", {
         username,
         password,
-        designation,
       });
 
-      const { access, role, department, year, section } = res;
+      const { access, role, designation, department, year, section } = res;
       if (!access) {
         alert("Invalid login");
         return;
@@ -43,19 +42,29 @@ export default function StaffLogin() {
       localStorage.setItem("year", year);
       localStorage.setItem("section", section);
 
-      if (role === "staff") {
-        if (designation === "faculty_fa" || designation === "faculty_subject") {
+      // Route based on role and designation
+      if (role === "hod") {
+        navigate("/hod/dashboard");
+      } else if (role === "admin") {
+        navigate("/admin/dashboard");
+      } else if (role === "staff") {
+        // Route based on designation for staff
+        if (designation === "placement_officer") {
+          navigate("/placement/dashboard");
+        } else if (designation === "association_advisor") {
+          navigate("/staff/dashboard");
+        } else if (designation === "hostel_warden") {
+          navigate("/staff/dashboard");
+        } else if (designation === "librarian") {
           navigate("/staff/dashboard");
         } else {
-          alert("Only faculty members can access the staff dashboard. Please choose Faculty (FA) or Faculty (Subject Holder).");
-          navigate("/staff/roles");
+          navigate("/staff/dashboard");
         }
-      } else if (role === "hod") navigate("/hod/dashboard");
-      else if (role === "admin") navigate("/admin/dashboard");
-      else navigate("/");
+      } else {
+        navigate("/");
+      }
     } catch (err) {
-      console.error(err);
-      alert(err?.message || "Login failed or designation mismatch");
+      alert(err?.message || "Login failed. Please check your credentials.");
     }
   };
 
