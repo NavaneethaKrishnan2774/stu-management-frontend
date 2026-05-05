@@ -13,11 +13,16 @@ const normalizeToken = (token) => {
   return trimmed;
 };
 
+const getTokenFromStorage = () => {
+  if (typeof window === "undefined") return null;
+  return normalizeToken(window.localStorage.getItem("token"));
+};
+
 const API = {
   post: async (endpoint, body, token) => {
     const headers = {};
     let payload = body;
-    const normalizedToken = normalizeToken(token);
+    const normalizedToken = normalizeToken(token) || getTokenFromStorage();
 
     if (!(body instanceof FormData)) {
       headers["Content-Type"] = "application/json";
@@ -55,7 +60,7 @@ const API = {
   put: async (endpoint, body, token) => {
     const headers = {};
     let payload = body;
-    const normalizedToken = normalizeToken(token);
+    const normalizedToken = normalizeToken(token) || getTokenFromStorage();
 
     if (!(body instanceof FormData)) {
       headers["Content-Type"] = "application/json";
@@ -92,7 +97,7 @@ const API = {
 
   delete: async (endpoint, token) => {
     const headers = {};
-    const normalizedToken = normalizeToken(token);
+    const normalizedToken = normalizeToken(token) || getTokenFromStorage();
     if (normalizedToken) {
       headers.Authorization = `Bearer ${normalizedToken}`;
     }
@@ -123,7 +128,7 @@ const API = {
 
   get: async (endpoint, params, token) => {
     const headers = {};
-    const normalizedToken = normalizeToken(token);
+    const normalizedToken = normalizeToken(token) || getTokenFromStorage();
     if (normalizedToken) {
       headers.Authorization = `Bearer ${normalizedToken}`;
     }
