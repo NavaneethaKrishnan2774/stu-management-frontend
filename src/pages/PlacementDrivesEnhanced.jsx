@@ -311,14 +311,17 @@ export default function PlacementDrivesEnhanced() {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ backgroundColor: "#f5f5f5", borderBottom: "2px solid #ddd" }}>
-                  <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", fontSize: "13px" }}>Name</th>
-                  <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", fontSize: "13px" }}>Reg. No.</th>
-                  <th style={{ padding: "12px", textAlign: "center", fontWeight: "600", fontSize: "13px" }}>Class</th>
+                  <th style={{ padding: "12px", textAlign: "center", fontWeight: "600", fontSize: "13px" }}>S.No</th>
+                  <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", fontSize: "13px" }}>Name of the Student</th>
+                  <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", fontSize: "13px" }}>Register Number</th>
+                  <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", fontSize: "13px" }}>Email / Mobile</th>
+                  <th style={{ padding: "12px", textAlign: "center", fontWeight: "600", fontSize: "13px" }}>Class (Dept / Year / Section)</th>
                   <th style={{ padding: "12px", textAlign: "center", fontWeight: "600", fontSize: "13px" }}>CGPA</th>
                   <th style={{ padding: "12px", textAlign: "center", fontWeight: "600", fontSize: "13px" }}>Arrears</th>
                   <th style={{ padding: "12px", textAlign: "center", fontWeight: "600", fontSize: "13px" }}>Offers</th>
-                  <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", fontSize: "13px" }}>Contact</th>
+                  <th style={{ padding: "12px", textAlign: "center", fontWeight: "600", fontSize: "13px" }}>Company</th>
                   <th style={{ padding: "12px", textAlign: "center", fontWeight: "600", fontSize: "13px" }}>Status</th>
+                  <th style={{ padding: "12px", textAlign: "center", fontWeight: "600", fontSize: "13px" }}>Resume</th>
                 </tr>
               </thead>
               <tbody>
@@ -342,33 +345,40 @@ export default function PlacementDrivesEnhanced() {
                         : getRoundColor(student.rounds_cleared);
                     }}
                   >
+                    <td style={{ padding: "12px", textAlign: "center", fontSize: "13px" }}>{index + 1}</td>
                     <td style={{ padding: "12px", fontSize: "14px" }}>
                       <strong>{student.name}</strong>
                     </td>
                     <td style={{ padding: "12px", color: "#666", fontSize: "13px" }}>{student.register_number}</td>
+                    <td style={{ padding: "12px", fontSize: "13px", color: "#666" }}>
+                      <div>{student.email || "N/A"}</div>
+                      <div style={{ fontSize: "12px", color: "#999" }}>{student.mobile}</div>
+                    </td>
                     <td style={{ padding: "12px", textAlign: "center", fontSize: "13px" }}>
-                      {student.year}/{student.section}
+                      {student.department || "-"} / {student.year || "-"} / {student.section || "-"}
                     </td>
                     <td style={{ padding: "12px", textAlign: "center", fontWeight: "500", fontSize: "13px" }}>{student.cgpa.toFixed(2)}</td>
                     <td style={{ padding: "12px", textAlign: "center", fontSize: "13px" }}>
-                      <span
-                        style={{
-                          backgroundColor: student.current_arrears > 0 ? "#FFEBEE" : "#E8F5E9",
-                          color: student.current_arrears > 0 ? "#c62828" : "#2e7d32",
-                          padding: "4px 8px",
-                          borderRadius: "4px",
-                          fontSize: "12px",
-                          fontWeight: "500",
-                        }}
-                      >
-                        {student.current_arrears}
-                      </span>
+                      <div style={{ marginBottom: "6px" }}>
+                        <span
+                          style={{
+                            backgroundColor: student.current_arrears > 0 ? "#FFEBEE" : "#E8F5E9",
+                            color: student.current_arrears > 0 ? "#c62828" : "#2e7d32",
+                            padding: "4px 8px",
+                            borderRadius: "4px",
+                            fontSize: "12px",
+                            fontWeight: "500",
+                          }}
+                        >
+                          {student.current_arrears}
+                        </span>
+                      </div>
+                      <div style={{ color: "#555", fontSize: "11px" }}>
+                        {student.arrears_history || "No history"}
+                      </div>
                     </td>
                     <td style={{ padding: "12px", textAlign: "center", fontWeight: "500", fontSize: "13px" }}>{student.total_offers}</td>
-                    <td style={{ padding: "12px", fontSize: "12px", color: "#666" }}>
-                      <div>{student.mobile}</div>
-                      <div style={{ fontSize: "11px" }}>{student.email}</div>
-                    </td>
+                    <td style={{ padding: "12px", textAlign: "center", fontSize: "13px" }}>{student.placed_company || "-"}</td>
                     <td style={{ padding: "12px", textAlign: "center" }}>
                       {student.placed ? (
                         <span
@@ -384,10 +394,10 @@ export default function PlacementDrivesEnhanced() {
                         >
                           ✓ Placed
                         </span>
-                      ) : student.rounds_cleared && student.rounds_cleared.length > 0 ? (
+                      ) : student.total_offers > 0 ? (
                         <span
                           style={{
-                            backgroundColor: "#ff9800",
+                            backgroundColor: "#1976d2",
                             color: "white",
                             padding: "6px 12px",
                             borderRadius: "4px",
@@ -396,10 +406,29 @@ export default function PlacementDrivesEnhanced() {
                             display: "inline-block",
                           }}
                         >
-                          {student.rounds_cleared[student.rounds_cleared.length - 1]} Round
+                          Applied
                         </span>
                       ) : (
-                        <span style={{ color: "#999", fontSize: "12px" }}>Applied</span>
+                        <span style={{ color: "#999", fontSize: "12px" }}>Not Applied</span>
+                      )}
+                    </td>
+                    <td style={{ padding: "12px", textAlign: "center" }}>
+                      {student.resume ? (
+                        <a
+                          href={student.resume}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{
+                            color: "#1976d2",
+                            textDecoration: "none",
+                            fontWeight: "600",
+                            fontSize: "13px",
+                          }}
+                        >
+                          View Resume
+                        </a>
+                      ) : (
+                        <span style={{ color: "#999", fontSize: "12px" }}>No Resume</span>
                       )}
                     </td>
                   </tr>
