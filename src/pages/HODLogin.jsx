@@ -14,7 +14,7 @@ export default function HODLogin() {
         username,
         password,
         designation,
-      });
+      }, false);
 
       const { access, role, designation: returnedDesignation, department, year, section } = res;
       if (!access) {

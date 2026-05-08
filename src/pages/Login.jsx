@@ -14,7 +14,7 @@ function Login() {
         username,
         password,
         designation,
-      });
+      }, false);
 
       const { access, role, department, year, section } = res;
 

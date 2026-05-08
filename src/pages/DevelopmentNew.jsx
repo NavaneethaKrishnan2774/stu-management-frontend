@@ -1,11 +1,39 @@
 import { useEffect, useState } from "react";
 import API from "../services/api";
-// updated to prototype student dashboard UI
 
 export default function Development() {
   const [drives, setDrives] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token || token === "null" || token === "undefined") {
+      setError("Authentication token missing.");
+      setLoading(false);
+      return;
+    }
+
+    API.get("api/students/student/placement-drives/", token)
+      .then((data) => {
+        const parsedDrives = (Array.isArray(data) ? data : []).map((drive) => ({
+          ...drive,
+          criteria_parsed: drive.criteria
+            ? (() => {
+                try {
+                  return JSON.parse(drive.criteria);
+                } catch (e) {
+                  return {};
+                }
+              })()
+            : {},
+        }));
+        setDrives(parsedDrives);
+      })
+      .catch((err) => setError(err?.message || "Unable to load placement drives."))
+      .finally(() => setLoading(false));
+  }, []);
+
   const totalDrives = drives.length;
   const totalPlacedOffers = drives.reduce((sum, drive) => sum + (drive.total_placed || 0), 0);
   const totalAppliedOffers = drives.reduce((sum, drive) => sum + (drive.total_applied || 0), 0);
@@ -44,33 +72,6 @@ export default function Development() {
       </div>
     </div>
   );
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token || token === "null" || token === "undefined") {
-      setError("Authentication token missing.");
-      setLoading(false);
-      return;
-    }
-
-    // Get placement drives for student's department
-    API.get("api/students/student/placement-drives/", token)
-      .then((data) => {
-        const parsedDrives = (Array.isArray(data) ? data : []).map(drive => ({
-          ...drive,
-          criteria_parsed: drive.criteria ? (() => {
-            try {
-              return JSON.parse(drive.criteria);
-            } catch (e) {
-              return {};
-            }
-          })() : {}
-        }));
-        setDrives(parsedDrives);
-      })
-      .catch((err) => setError(err?.message || "Unable to load placement drives."))
-      .finally(() => setLoading(false));
-  }, []);
 
   return (
     <div style={{ padding: "24px", minHeight: "100vh", background: "linear-gradient(135deg, #f0f4f9 0%, #e2e8f0 100%)", fontFamily: "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" }}>
@@ -239,166 +240,6 @@ export default function Development() {
           </>
         )}
       </div>
-    </div>
-  );
-}
-                    <p style={{ margin: "0", color: "#7f8c8d" }}>
-                      <strong>Date:</strong> {new Date(drive.drive_date).toLocaleDateString()}
-                    </p>
-                    <p style={{ margin: "0", color: "#7f8c8d" }}>
-                      <strong>Department:</strong> {drive.department}
-                    </p>
-                  </div>
-                  <div style={{ textAlign: "right" }}>
-                    <div style={{
-                      padding: "8px 16px",
-                      borderRadius: "20px",
-                      fontSize: "14px",
-                      fontWeight: "bold",
-                      color: "white",
-                      backgroundColor:
-                        drive.my_status === 'placed' ? '#27ae60' :
-                        drive.my_status === 'applied' ? '#f39c12' :
-                        drive.my_status === 'shortlisted' ? '#3498db' : '#95a5a6'
-                    }}>
-                      {drive.my_status === 'placed' ? '✓ Placed' :
-                       drive.my_status === 'applied' ? 'Applied' :
-                       drive.my_status === 'shortlisted' ? 'Shortlisted' : 'Not Applied'}
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ marginBottom: "16px" }}>
-                  <h3 style={{ margin: "0 0 8px 0", fontSize: "16px" }}>Company Details:</h3>
-                  <div style={{
-                    backgroundColor: "#f8f9fa",
-                    padding: "12px",
-                    borderRadius: "8px",
-                    fontSize: "14px",
-                    color: "#2c3e50"
-                  }}>
-                    {drive.criteria_parsed?.company_history && (
-                      <div style={{ marginBottom: "10px" }}>
-                        <strong>📖 Company Overview:</strong>
-                        <p style={{ margin: "4px 0 0 0", color: "#555" }}>{drive.criteria_parsed.company_history}</p>
-                      </div>
-                    )}
-                    {drive.criteria_parsed?.company_location && (
-                      <div style={{ marginBottom: "10px" }}>
-                        <strong>📍 Location:</strong>
-                        <p style={{ margin: "4px 0 0 0", color: "#555" }}>{drive.criteria_parsed.company_location}</p>
-                      </div>
-                    )}
-                    {drive.criteria_parsed?.expected_skills && drive.criteria_parsed.expected_skills.length > 0 && (
-                      <div>
-                        <strong>💡 Expected Skills:</strong>
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "6px" }}>
-                          {drive.criteria_parsed.expected_skills.map((skill, idx) => (
-                            <span key={idx} style={{
-                              background: "#e3f2fd",
-                              color: "#1976d2",
-                              padding: "4px 10px",
-                              borderRadius: "12px",
-                              fontSize: "12px",
-                              fontWeight: "500"
-                            }}>{skill}</span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {drive.criteria && (
-                  <div style={{ marginBottom: "16px" }}>
-                    <h3 style={{ margin: "0 0 8px 0", fontSize: "16px" }}>Eligibility Criteria:</h3>
-                    <div style={{
-                      backgroundColor: "#f8f9fa",
-                      padding: "12px",
-                      borderRadius: "8px",
-                      fontFamily: "monospace",
-                      fontSize: "14px"
-                    }}>
-                      {drive.criteria}
-                    </div>
-                  </div>
-                )}
-
-                {drive.document && (
-                  <div style={{ marginBottom: "16px" }}>
-                    <a
-                      href={drive.document}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        color: "#3498db",
-                        textDecoration: "none",
-                        fontWeight: "bold"
-                      }}
-                    >
-                      📄 View Drive Document
-                    </a>
-                  </div>
-                )}
-
-                <div style={{ marginTop: "16px" }}>
-                  <h3 style={{ margin: "0 0 12px 0", fontSize: "16px" }}>Drive Information:</h3>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "12px" }}>
-                    <div style={{ textAlign: "center", padding: "12px", backgroundColor: "#f8f9fa", borderRadius: "8px" }}>
-                      <div style={{ fontSize: "24px", fontWeight: "bold", color: "#3498db" }}>{drive.total_applied}</div>
-                      <div style={{ fontSize: "12px", color: "#7f8c8d" }}>Applied</div>
-                    </div>
-                    <div style={{ textAlign: "center", padding: "12px", backgroundColor: "#f8f9fa", borderRadius: "8px" }}>
-                      <div style={{ fontSize: "24px", fontWeight: "bold", color: "#e74c3c" }}>{drive.total_shortlisted}</div>
-                      <div style={{ fontSize: "12px", color: "#7f8c8d" }}>Shortlisted</div>
-                    </div>
-                    <div style={{ textAlign: "center", padding: "12px", backgroundColor: "#f8f9fa", borderRadius: "8px" }}>
-                      <div style={{ fontSize: "24px", fontWeight: "bold", color: "#27ae60" }}>{drive.total_placed}</div>
-                      <div style={{ fontSize: "12px", color: "#7f8c8d" }}>Placed</div>
-                    </div>
-                  </div>
-                </div>
-
-                {drive.attendees && drive.attendees.length > 0 && (
-                  <div style={{ marginTop: "16px" }}>
-                    <h3 style={{ margin: "0 0 12px 0", fontSize: "16px" }}>Who is Attending:</h3>
-                    <div style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))",
-                      gap: "8px"
-                    }}>
-                      {drive.attendees.map((student) => (
-                        <div
-                          key={student.id}
-                          style={{
-                            padding: "8px 12px",
-                            backgroundColor: student.status === 'placed' ? "#d4edda" : "#fff3cd",
-                            border: `1px solid ${student.status === 'placed' ? "#c3e6cb" : "#ffeaa7"}`,
-                            borderRadius: "6px",
-                            fontSize: "14px"
-                          }}
-                        >
-                          <div style={{ fontWeight: "bold" }}>{student.name}</div>
-                          <div style={{ color: "#666", fontSize: "12px" }}>
-                            {student.register_number}
-                          </div>
-                          <div style={{
-                            color: student.status === 'placed' ? "#155724" : "#856404",
-                            fontSize: "12px",
-                            fontWeight: "bold"
-                          }}>
-                            {student.status === 'placed' ? '✓ Placed' : 'Attending'}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))
-          )}
-        </div>
-      )}
     </div>
   );
 }

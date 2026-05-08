@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 
@@ -59,6 +59,10 @@ export default function PlacementDrivesEnhanced() {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    fetchStudents();
+  }, []);
 
   const getRoundColor = (rounds) => {
     if (!rounds || rounds.length === 0) return "#ffffff";

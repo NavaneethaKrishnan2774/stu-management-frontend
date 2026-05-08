@@ -30,14 +30,14 @@ import FeedbackComments from "./pages/FeedbackComments";
 import PlacementOfficerDashboard from "./pages/PlacementOfficerDashboard";
 import PlacementStudents from "./pages/PlacementStudents";
 import PlacementCreateDrive from "./pages/PlacementCreateDrive";
-import PlacementDrives from "./pages/PlacementDrives";
 import PlacementDrivesEnhanced from "./pages/PlacementDrivesEnhanced";
+import PlacementCompanies from "./pages/PlacementCompanies";
 import PlacementOfficerRoute from "./components/PlacementOfficerRoute";
 
 // import modules
 import Academic from "./pages/Academic";
 import Administrative from "./pages/Administrative";
-import Development from "./pages/Development";
+import Development from "./pages/DevelopmentNew";
 import Communication from "./pages/Communication";
 import Analytics from "./pages/Analytics";
 import Navigation from "./pages/Navigation";
@@ -84,6 +84,7 @@ function App() {
         <Route path="/placement/students/:department" element={<PlacementOfficerRoute><PlacementStudents /></PlacementOfficerRoute>} />
         <Route path="/placement/create-drive" element={<PlacementOfficerRoute><PlacementCreateDrive /></PlacementOfficerRoute>} />
         <Route path="/placement/drives" element={<PlacementOfficerRoute><PlacementDrivesEnhanced /></PlacementOfficerRoute>} />
+        <Route path="/placement/companies" element={<PlacementOfficerRoute><PlacementCompanies /></PlacementOfficerRoute>} />
 
         {/* ✅ ADD MODULE ROUTES HERE */}
         <Route path="/academics" element={<Academic />} />

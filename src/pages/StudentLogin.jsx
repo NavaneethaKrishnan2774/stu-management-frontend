@@ -13,7 +13,7 @@ export default function StudentLogin() {
         username: registerNumber,
         password,
         designation: "student",
-      });
+      }, false);
 
       const { access, role, department, year, section } = res;
       if (!access) {

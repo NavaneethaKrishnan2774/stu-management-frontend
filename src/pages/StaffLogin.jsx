@@ -19,7 +19,7 @@ export default function StaffLogin() {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const defaultDesignation = queryParams.get("designation") || "staff";
-  const [designation] = useState(defaultDesignation);
+  const [selectedDesignation] = useState(defaultDesignation);
   const navigate = useNavigate();
 
   const handleSubmit = async () => {
@@ -27,17 +27,19 @@ export default function StaffLogin() {
       const res = await API.post("api/login/", {
         username,
         password,
-      });
+        designation: selectedDesignation,
+      }, false);
 
-      const { access, role, designation, department, year, section } = res;
+      const { access, role, designation: returnedDesignation, department, year, section } = res;
       if (!access) {
         alert("Invalid login");
         return;
       }
 
+      const storedDesignation = returnedDesignation || selectedDesignation;
       localStorage.setItem("token", access);
       localStorage.setItem("role", role);
-      localStorage.setItem("designation", designation);
+      localStorage.setItem("designation", storedDesignation);
       localStorage.setItem("department", department);
       localStorage.setItem("year", year);
       localStorage.setItem("section", section);
@@ -49,14 +51,8 @@ export default function StaffLogin() {
         navigate("/admin/dashboard");
       } else if (role === "staff") {
         // Route based on designation for staff
-        if (designation === "placement_officer") {
+        if (storedDesignation === "placement_officer") {
           navigate("/placement/dashboard");
-        } else if (designation === "association_advisor") {
-          navigate("/staff/dashboard");
-        } else if (designation === "hostel_warden") {
-          navigate("/staff/dashboard");
-        } else if (designation === "librarian") {
-          navigate("/staff/dashboard");
         } else {
           navigate("/staff/dashboard");
         }
@@ -86,7 +82,7 @@ export default function StaffLogin() {
         type="text"
         readOnly
         style={{ width: "100%", padding: "10px", marginBottom: "12px", backgroundColor: "#f9f9f9" }}
-        value={designationLabels[designation] || designation}
+        value={designationLabels[selectedDesignation] || selectedDesignation}
       />
 
       <label style={{ display: "block", marginBottom: "8px", fontWeight: "bold" }}>Password</label>

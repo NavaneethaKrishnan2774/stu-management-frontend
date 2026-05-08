@@ -782,84 +782,120 @@ export default function StaffDashboard() {
   };
 
   return (
-    <div>
-      <h1>Staff Dashboard - Submissions</h1>
+    <div style={{ 
+      maxWidth: "1400px", 
+      margin: "0 auto", 
+      padding: "24px",
+      fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+      backgroundColor: "#f8fafc",
+      minHeight: "100vh"
+    }}>
+      <div style={{ 
+        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        borderRadius: "24px",
+        padding: "32px",
+        marginBottom: "32px",
+        color: "white",
+        boxShadow: "0 10px 40px rgba(0,0,0,0.1)"
+      }}>
+        <h1 style={{ fontSize: "32px", fontWeight: "700", margin: "0 0 8px 0" }}>👨‍🏫 Staff Dashboard</h1>
+        <p style={{ margin: 0, opacity: 0.9 }}>Manage submissions, notifications, feedback, and timetable</p>
+      </div>
 
-      <h2>Create Notification</h2>
+      {/* Create Notification Section */}
+      <div style={{ 
+        backgroundColor: "white", 
+        borderRadius: "20px", 
+        padding: "32px",
+        marginBottom: "32px",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+        border: "1px solid #e2e8f0"
+      }}>
+        <h2 style={{ margin: "0 0 24px 0", fontSize: "24px", fontWeight: "600", color: "#1e293b" }}>📢 Create Notification</h2>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "16px", marginBottom: "16px" }}>
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Title"
+            style={{ padding: "12px", borderRadius: "12px", border: "1px solid #cbd5e1", fontSize: "14px" }}
+          />
+          <textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Message"
+            rows={3}
+            style={{ padding: "12px", borderRadius: "12px", border: "1px solid #cbd5e1", fontSize: "14px" }}
+          />
+        </div>
 
-      <input
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        placeholder="Title"
-      />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px", marginBottom: "16px" }}>
+          <select value={department} onChange={(e) => setDepartment(e.target.value)} disabled={isFacultyFA} style={{ padding: "12px", borderRadius: "12px", border: "1px solid #cbd5e1", backgroundColor: isFacultyFA ? "#f1f5f9" : "white" }}>
+            <option value="">Select Department</option>
+            <option value="all">All Departments</option>
+            <option value="CSE">CSE</option>
+            <option value="ECE">ECE</option>
+            <option value="EEE">EEE</option>
+            <option value="MECH">MECH</option>
+          </select>
 
-      <input
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        placeholder="Message"
-      />
+          <select value={year} onChange={(e) => setYear(e.target.value)} disabled={isFacultyFA} style={{ padding: "12px", borderRadius: "12px", border: "1px solid #cbd5e1", backgroundColor: isFacultyFA ? "#f1f5f9" : "white" }}>
+            <option value="">Select Year</option>
+            <option value="all">All Years</option>
+            <option value="1">1st Year</option>
+            <option value="2">2nd Year</option>
+            <option value="3">3rd Year</option>
+            <option value="4">4th Year</option>
+          </select>
 
-      <select value={department} onChange={(e) => setDepartment(e.target.value)} disabled={isFacultyFA}>
-        <option value="">Select Department</option>
-        <option value="all">All Departments</option>
-        <option value="CSE">CSE</option>
-        <option value="ECE">ECE</option>
-        <option value="EEE">EEE</option>
-        <option value="MECH">MECH</option>
-      </select>
+          <select value={section} onChange={(e) => setSection(e.target.value)} disabled={isFacultyFA} style={{ padding: "12px", borderRadius: "12px", border: "1px solid #cbd5e1", backgroundColor: isFacultyFA ? "#f1f5f9" : "white" }}>
+            <option value="">Select Section</option>
+            <option value="all">All Sections</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+          </select>
 
-      <select value={year} onChange={(e) => setYear(e.target.value)} disabled={isFacultyFA}>
-        <option value="">Select Year</option>
-        <option value="all">All Years</option>
-        <option value="1">1st Year</option>
-        <option value="2">2nd Year</option>
-        <option value="3">3rd Year</option>
-        <option value="4">4th Year</option>
-      </select>
+          <input
+            type="datetime-local"
+            value={scheduledTime}
+            onChange={(e) => setScheduledTime(e.target.value)}
+            style={{ padding: "12px", borderRadius: "12px", border: "1px solid #cbd5e1" }}
+          />
 
-      <select value={section} onChange={(e) => setSection(e.target.value)} disabled={isFacultyFA}>
-        <option value="">Select Section</option>
-        <option value="all">All Sections</option>
-        <option value="A">A</option>
-        <option value="B">B</option>
-        <option value="C">C</option>
-      </select>
+          <input type="file" onChange={(e) => setFile(e.target.files[0])} style={{ padding: "10px", borderRadius: "12px", border: "1px solid #cbd5e1" }} />
+        </div>
 
-      <input
-        type="datetime-local"
-        value={scheduledTime}
-        onChange={(e) => setScheduledTime(e.target.value)}
-      />
-
-      <input type="file" onChange={(e) => setFile(e.target.files[0])} />
-
-      <button onClick={handleCreateNotification}>Send</button>
+        <button onClick={handleCreateNotification} style={{ padding: "12px 24px", backgroundColor: "#667eea", color: "white", border: "none", borderRadius: "12px", fontWeight: "600", cursor: "pointer" }}>
+          📤 Send Notification
+        </button>
+      </div>
 
       {/* Timetable Section */}
-      <section style={{ marginTop: "24px", marginBottom: "24px", borderTop: "2px solid #ccc", paddingTop: "20px" }}>
-        <h2>Class Timetable Management</h2>
-        <button 
-          onClick={() => setShowTimetableForm(!showTimetableForm)}
-          style={{ marginBottom: "16px", padding: "8px 16px", backgroundColor: "#4CAF50", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
-        >
-          {showTimetableForm ? "Hide Timetable Form" : "Add Timetable Entry"}
-        </button>
+      <div style={{ 
+        backgroundColor: "white", 
+        borderRadius: "20px", 
+        padding: "32px",
+        marginBottom: "32px",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+        border: "1px solid #e2e8f0"
+      }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px", flexWrap: "wrap", gap: "16px" }}>
+          <h2 style={{ margin: 0, fontSize: "24px", fontWeight: "600", color: "#1e293b" }}>📅 Timetable Management</h2>
+          <button 
+            onClick={() => setShowTimetableForm(!showTimetableForm)}
+            style={{ padding: "10px 20px", backgroundColor: "#10b981", color: "white", border: "none", borderRadius: "12px", cursor: "pointer", fontWeight: "500" }}
+          >
+            {showTimetableForm ? "− Hide Form" : "+ Add Timetable Entry"}
+          </button>
+        </div>
 
         {showTimetableForm && (
-          <div style={{ border: "1px solid #ddd", padding: "20px", borderRadius: "8px", marginBottom: "20px" }}>
-            <div style={{ marginBottom: "16px", padding: "12px", background: "#eef6ff", borderRadius: "8px" }}>
-              <strong>Tip:</strong> If you want to see the full staff list, visit the <a href="/admin/dashboard">Admin page</a>.
-            </div>
-            <h3>{isEditingTimetable ? "Edit Timetable Entry" : "Create Timetable Entry"}</h3>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+          <div style={{ border: "1px solid #e2e8f0", borderRadius: "16px", padding: "24px", marginBottom: "32px", backgroundColor: "#f8fafc" }}>
+            <h3 style={{ margin: "0 0 20px 0", fontSize: "18px", fontWeight: "600", color: "#1e293b" }}>{isEditingTimetable ? "✏️ Edit Timetable Entry" : "➕ Create Timetable Entry"}</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "16px" }}>
               <div>
-                <label style={{ fontSize: "12px", fontWeight: "bold", display: "block", marginBottom: "4px" }}>Department:</label>
-                <select 
-                  value={timetableDepartment} 
-                  onChange={(e) => setTimetableDepartment(e.target.value)}
-                  disabled={isFacultyFA}
-                  style={{ width: "100%", padding: "6px", fontSize: "13px" }}
-                >
+                <label style={{ fontSize: "13px", fontWeight: "600", display: "block", marginBottom: "6px", color: "#475569" }}>Department:</label>
+                <select value={timetableDepartment} onChange={(e) => setTimetableDepartment(e.target.value)} disabled={isFacultyFA} style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #cbd5e1" }}>
                   <option value="">Select Department</option>
                   <option value="CSE">CSE</option>
                   <option value="ECE">ECE</option>
@@ -870,13 +906,8 @@ export default function StaffDashboard() {
               </div>
               
               <div>
-                <label style={{ fontSize: "12px", fontWeight: "bold", display: "block", marginBottom: "4px" }}>Year:</label>
-                <select 
-                  value={timetableYear} 
-                  onChange={(e) => setTimetableYear(e.target.value)}
-                  disabled={isFacultyFA}
-                  style={{ width: "100%", padding: "6px", fontSize: "13px" }}
-                >
+                <label style={{ fontSize: "13px", fontWeight: "600", display: "block", marginBottom: "6px", color: "#475569" }}>Year:</label>
+                <select value={timetableYear} onChange={(e) => setTimetableYear(e.target.value)} disabled={isFacultyFA} style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #cbd5e1" }}>
                   <option value="">Select Year</option>
                   <option value="1">1st Year</option>
                   <option value="2">2nd Year</option>
@@ -886,134 +917,73 @@ export default function StaffDashboard() {
               </div>
               
               <div>
-                <label style={{ fontSize: "12px", fontWeight: "bold", display: "block", marginBottom: "4px" }}>Section:</label>
-                <select 
-                  value={timetableSection} 
-                  onChange={(e) => setTimetableSection(e.target.value)}
-                  disabled={isFacultyFA}
-                  style={{ width: "100%", padding: "6px", fontSize: "13px" }}
-                >
+                <label style={{ fontSize: "13px", fontWeight: "600", display: "block", marginBottom: "6px", color: "#475569" }}>Section:</label>
+                <select value={timetableSection} onChange={(e) => setTimetableSection(e.target.value)} disabled={isFacultyFA} style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #cbd5e1" }}>
                   <option value="">Select Section</option>
                   <option value="A">A</option>
                   <option value="B">B</option>
                   <option value="C">C</option>
                 </select>
               </div>
-            </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "12px" }}>
               <div>
-                <label style={{ fontSize: "12px", fontWeight: "bold", display: "block", marginBottom: "4px" }}>Semester:</label>
-                <select 
-                  value={timetableSemester} 
-                  onChange={(e) => setTimetableSemester(e.target.value)}
-                  style={{ width: "100%", padding: "6px", fontSize: "13px" }}
-                >
+                <label style={{ fontSize: "13px", fontWeight: "600", display: "block", marginBottom: "6px", color: "#475569" }}>Semester:</label>
+                <select value={timetableSemester} onChange={(e) => setTimetableSemester(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #cbd5e1" }}>
                   <option value="">Select Semester</option>
-                  <option value="1">Semester 1</option>
-                  <option value="2">Semester 2</option>
-                  <option value="3">Semester 3</option>
-                  <option value="4">Semester 4</option>
-                  <option value="5">Semester 5</option>
-                  <option value="6">Semester 6</option>
-                  <option value="7">Semester 7</option>
-                  <option value="8">Semester 8</option>
+                  {[1,2,3,4,5,6,7,8].map(s => <option key={s} value={s}>Semester {s}</option>)}
                 </select>
               </div>
               
               <div>
-                <label style={{ fontSize: "12px", fontWeight: "bold", display: "block", marginBottom: "4px" }}>Day:</label>
-                <select 
-                  value={timetableDay} 
-                  onChange={(e) => setTimetableDay(e.target.value)}
-                  style={{ width: "100%", padding: "6px", fontSize: "13px" }}
-                >
+                <label style={{ fontSize: "13px", fontWeight: "600", display: "block", marginBottom: "6px", color: "#475569" }}>Day:</label>
+                <select value={timetableDay} onChange={(e) => setTimetableDay(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #cbd5e1" }}>
                   <option value="">Select Day</option>
-                  {days.map(day => (
-                    <option key={day} value={day}>{day}</option>
-                  ))}
+                  {days.map(day => <option key={day} value={day}>{day}</option>)}
                 </select>
               </div>
               
               <div>
-                <label style={{ fontSize: "12px", fontWeight: "bold", display: "block", marginBottom: "4px" }}>Period:</label>
-                <select 
-                  value={timetablePeriod} 
-                  onChange={(e) => setTimetablePeriod(e.target.value)}
-                  style={{ width: "100%", padding: "6px", fontSize: "13px" }}
-                >
+                <label style={{ fontSize: "13px", fontWeight: "600", display: "block", marginBottom: "6px", color: "#475569" }}>Period:</label>
+                <select value={timetablePeriod} onChange={(e) => setTimetablePeriod(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #cbd5e1" }}>
                   <option value="">Select Period</option>
                   {periods.filter(p => !p.isBreak).map(period => (
-                    <option key={period.id} value={period.id}>
-                      {period.name} ({period.time})
-                    </option>
+                    <option key={period.id} value={period.id}>{period.name} ({period.time})</option>
                   ))}
                 </select>
               </div>
-            </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "12px" }}>
               <div>
-                <label style={{ fontSize: "12px", fontWeight: "bold", display: "block", marginBottom: "4px" }}>Faculty:</label>
-                <select 
-                  value={timetableFaculty} 
-                  onChange={(e) => setTimetableFaculty(e.target.value)}
-                  style={{ width: "100%", padding: "6px", fontSize: "13px" }}
-                >
+                <label style={{ fontSize: "13px", fontWeight: "600", display: "block", marginBottom: "6px", color: "#475569" }}>Faculty:</label>
+                <select value={timetableFaculty} onChange={(e) => setTimetableFaculty(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #cbd5e1" }}>
                   <option value="">Select Faculty</option>
-                  {facultyOptions.map((faculty) => {
-                    const label = faculty.full_name || faculty.username;
-                    return (
-                      <option key={faculty.id} value={faculty.id}>
-                        {label}{faculty.designation ? ` — ${faculty.designation}` : ""}
-                      </option>
-                    );
-                  })}
+                  {facultyOptions.map((faculty) => (
+                    <option key={faculty.id} value={faculty.id}>{faculty.full_name || faculty.username}</option>
+                  ))}
                 </select>
               </div>
               
               <div>
-                <label style={{ fontSize: "12px", fontWeight: "bold", display: "block", marginBottom: "4px" }}>Subject Code:</label>
-                <input
-                  type="text"
-                  value={timetableSubjectCode}
-                  onChange={(e) => setTimetableSubjectCode(e.target.value)}
-                  placeholder="e.g., CS101"
-                  style={{ width: "100%", padding: "6px", fontSize: "13px" }}
-                />
+                <label style={{ fontSize: "13px", fontWeight: "600", display: "block", marginBottom: "6px", color: "#475569" }}>Subject Code:</label>
+                <input type="text" value={timetableSubjectCode} onChange={(e) => setTimetableSubjectCode(e.target.value)} placeholder="e.g., CS101" style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #cbd5e1" }} />
               </div>
               
               <div>
-                <label style={{ fontSize: "12px", fontWeight: "bold", display: "block", marginBottom: "4px" }}>Subject Name:</label>
-                <input
-                  type="text"
-                  value={timetableSubjectName}
-                  onChange={(e) => setTimetableSubjectName(e.target.value)}
-                  placeholder="Subject Name"
-                  style={{ width: "100%", padding: "6px", fontSize: "13px" }}
-                />
+                <label style={{ fontSize: "13px", fontWeight: "600", display: "block", marginBottom: "6px", color: "#475569" }}>Subject Name:</label>
+                <input type="text" value={timetableSubjectName} onChange={(e) => setTimetableSubjectName(e.target.value)} placeholder="Subject Name" style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #cbd5e1" }} />
               </div>
-            </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "12px", marginBottom: "12px" }}>
               <div>
-                <label style={{ fontSize: "12px", fontWeight: "bold", display: "block", marginBottom: "4px" }}>Credits:</label>
-                <input
-                  type="number"
-                  value={timetableCredits}
-                  onChange={(e) => setTimetableCredits(e.target.value)}
-                  placeholder="Credits"
-                  style={{ width: "100%", padding: "6px", fontSize: "13px" }}
-                />
+                <label style={{ fontSize: "13px", fontWeight: "600", display: "block", marginBottom: "6px", color: "#475569" }}>Credits:</label>
+                <input type="number" value={timetableCredits} onChange={(e) => setTimetableCredits(e.target.value)} placeholder="Credits" style={{ width: "100%", padding: "10px", borderRadius: "10px", border: "1px solid #cbd5e1" }} />
               </div>
             </div>
 
-            <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-              <button onClick={isEditingTimetable ? handleUpdateTimetable : handleCreateTimetable} style={{ padding: "8px 16px", backgroundColor: "#2196F3", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}>
-                {isEditingTimetable ? "Save Changes" : "Create Timetable Entry"}
+            <div style={{ display: "flex", gap: "12px", marginTop: "24px" }}>
+              <button onClick={isEditingTimetable ? handleUpdateTimetable : handleCreateTimetable} style={{ padding: "10px 24px", backgroundColor: "#667eea", color: "white", border: "none", borderRadius: "10px", cursor: "pointer", fontWeight: "500" }}>
+                {isEditingTimetable ? "💾 Save Changes" : "✨ Create Entry"}
               </button>
               {isEditingTimetable && (
-                <button onClick={resetTimetableForm} style={{ padding: "8px 16px", backgroundColor: "#757575", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}>
+                <button onClick={resetTimetableForm} style={{ padding: "10px 24px", backgroundColor: "#64748b", color: "white", border: "none", borderRadius: "10px", cursor: "pointer", fontWeight: "500" }}>
                   Cancel
                 </button>
               )}
@@ -1021,62 +991,76 @@ export default function StaffDashboard() {
           </div>
         )}
 
-        <h3>Existing Timetable Entries</h3>
+        <h3 style={{ fontSize: "18px", fontWeight: "600", marginBottom: "16px", color: "#1e293b" }}>📋 Existing Timetable Entries</h3>
         {timetables.length === 0 ? (
-          <p>No timetable entries created yet.</p>
+          <div style={{ textAlign: "center", padding: "40px", backgroundColor: "#f8fafc", borderRadius: "16px" }}>
+            <p style={{ color: "#64748b" }}>No timetable entries created yet.</p>
+          </div>
         ) : (
           <div style={{ overflowX: "auto" }}>
-            <table border="1" style={{ width: "100%", borderCollapse: "collapse" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
-                <tr style={{ backgroundColor: "#f2f2f2" }}>
-                  <th>Department</th>
-                  <th>Year</th>
-                  <th>Section</th>
-                  <th>Semester</th>
-                  <th>Day</th>
-                  <th>Period</th>
-                  <th>Subject Code</th>
-                  <th>Subject Name</th>
-                  <th>Faculty</th>
-                  <th>Credits</th>
-                  <th>Status</th>
-                  <th>HOD Comment</th>
-                  <th>Action</th>
+                <tr style={{ backgroundColor: "#f8fafc", borderBottom: "2px solid #e2e8f0" }}>
+                  <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", color: "#475569" }}>Dept</th>
+                  <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", color: "#475569" }}>Year</th>
+                  <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", color: "#475569" }}>Sec</th>
+                  <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", color: "#475569" }}>Sem</th>
+                  <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", color: "#475569" }}>Day</th>
+                  <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", color: "#475569" }}>Period</th>
+                  <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", color: "#475569" }}>Code</th>
+                  <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", color: "#475569" }}>Subject</th>
+                  <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", color: "#475569" }}>Faculty</th>
+                  <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", color: "#475569" }}>Credits</th>
+                  <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", color: "#475569" }}>Status</th>
+                  <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", color: "#475569" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {timetables.map((t) => {
                   const periodInfo = periods.find(p => p.id === parseInt(t.period));
+                  const statusColors = {
+                    approved: "#10b981",
+                    draft: "#f59e0b",
+                    rejected: "#ef4444",
+                    rework_assigned: "#8b5cf6"
+                  };
+                  const statusColor = statusColors[t.approval_status] || "#64748b";
                   return (
-                    <tr key={t.id}>
-                      <td>{t.department}</td>
-                      <td>{t.year}</td>
-                      <td>{t.section}</td>
-                      <td>{t.semester}</td>
-                      <td>{t.day}</td>
-                      <td>
-                        {periodInfo ? periodInfo.name : `Period ${t.period}`}
-                        <br/>
-                        <small>{periodInfo ? periodInfo.time : ""}</small>
+                    <tr key={t.id} style={{ borderBottom: "1px solid #e2e8f0" }}>
+                      <td style={{ padding: "12px", color: "#334155" }}>{t.department}</td>
+                      <td style={{ padding: "12px", color: "#334155" }}>{t.year}</td>
+                      <td style={{ padding: "12px", color: "#334155" }}>{t.section}</td>
+                      <td style={{ padding: "12px", color: "#334155" }}>{t.semester}</td>
+                      <td style={{ padding: "12px", color: "#334155" }}>{t.day}</td>
+                      <td style={{ padding: "12px", color: "#334155" }}>{periodInfo ? periodInfo.name : `Period ${t.period}`}</td>
+                      <td style={{ padding: "12px", color: "#334155", fontWeight: "500" }}>{t.subject_code}</td>
+                      <td style={{ padding: "12px", color: "#334155" }}>{t.subject || t.subject_name}</td>
+                      <td style={{ padding: "12px", color: "#667eea" }}>{t.faculty || "Unknown"}</td>
+                      <td style={{ padding: "12px", color: "#334155" }}>{t.credits}</td>
+                      <td style={{ padding: "12px" }}>
+                        <span style={{ 
+                          padding: "4px 12px", 
+                          borderRadius: "20px", 
+                          fontSize: "12px", 
+                          fontWeight: "600",
+                          backgroundColor: statusColor + "20",
+                          color: statusColor
+                        }}>
+                          {t.approval_status || (t.is_approved ? 'approved' : 'draft')}
+                        </span>
                       </td>
-                      <td>{t.subject_code}</td>
-                      <td>{t.subject || t.subject_name || "-"}</td>
-                      <td>{t.faculty || "Unknown"}</td>
-                      <td>{t.credits}</td>
-                      <td>{t.approval_status || (t.is_approved ? 'approved' : 'draft')}</td>
-                      <td>{t.hod_comment || '-'}</td>
-                      <td style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <td style={{ padding: "12px", display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                         {t.approval_status !== 'approved' && (
-                          <button onClick={() => handleEditTimetable(t)} style={{ padding: "4px 8px", backgroundColor: "#4caf50", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}>
+                          <button onClick={() => handleEditTimetable(t)} style={{ padding: "6px 12px", backgroundColor: "#10b981", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "12px" }}>
                             Edit
                           </button>
                         )}
                         {['draft', 'rejected', 'rework_assigned'].includes(t.approval_status) && (
-                          <button onClick={() => handleSubmitTimetable(t.id)} style={{ padding: "4px 8px", backgroundColor: "#1976d2", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}>
+                          <button onClick={() => handleSubmitTimetable(t.id)} style={{ padding: "6px 12px", backgroundColor: "#667eea", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "12px" }}>
                             Submit
                           </button>
                         )}
-                        <button onClick={() => handleDeleteTimetable(t.id)} style={{ padding: "4px 8px", backgroundColor: "#f44336", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}>
+                        <button onClick={() => handleDeleteTimetable(t.id)} style={{ padding: "6px 12px", backgroundColor: "#ef4444", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "12px" }}>
                           Delete
                         </button>
                       </td>
@@ -1087,203 +1071,167 @@ export default function StaffDashboard() {
             </table>
           </div>
         )}
-      </section>
+      </div>
 
-      <section style={{ marginTop: "24px", marginBottom: "24px" }}>
-        <h2>Create Feedback Form</h2>
+      {/* Create Feedback Form Section */}
+      <div style={{ 
+        backgroundColor: "white", 
+        borderRadius: "20px", 
+        padding: "32px",
+        marginBottom: "32px",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+        border: "1px solid #e2e8f0"
+      }}>
+        <h2 style={{ margin: "0 0 24px 0", fontSize: "24px", fontWeight: "600", color: "#1e293b" }}>📊 Create Feedback Form</h2>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "12px", marginBottom: "16px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px", marginBottom: "24px" }}>
           {feedbackCategories.map((category) => (
             <button
               key={category.value}
               type="button"
               onClick={() => setFeedbackType(category.value)}
               style={{
-                padding: "14px",
-                borderRadius: "12px",
-                border: feedbackType === category.value ? "2px solid #1a73e8" : "1px solid #ccc",
-                background: feedbackType === category.value ? "#e8f0fe" : "#fff",
+                padding: "16px",
+                borderRadius: "16px",
+                border: feedbackType === category.value ? "2px solid #667eea" : "1px solid #e2e8f0",
+                background: feedbackType === category.value ? "#eef2ff" : "#f8fafc",
                 cursor: "pointer",
                 textAlign: "left",
+                transition: "all 0.2s ease"
               }}
             >
-              <strong>{category.label}</strong>
-              <p style={{ margin: "8px 0 0", fontSize: "13px", color: "#555" }}>{category.description}</p>
+              <strong style={{ color: "#1e293b" }}>{category.label}</strong>
+              <p style={{ margin: "8px 0 0", fontSize: "13px", color: "#64748b" }}>{category.description}</p>
             </button>
           ))}
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "8px", marginBottom: "8px" }}>
-          <textarea
-            value={feedbackDescription}
-            onChange={(e) => setFeedbackDescription(e.target.value)}
-            placeholder="Feedback Description"
-            rows={4}
-            style={{ width: "100%", padding: "8px", fontSize: "14px" }}
-          />
-        </div>
+        <textarea
+          value={feedbackDescription}
+          onChange={(e) => setFeedbackDescription(e.target.value)}
+          placeholder="Feedback Description"
+          rows={3}
+          style={{ width: "100%", padding: "12px", borderRadius: "12px", border: "1px solid #cbd5e1", fontSize: "14px", marginBottom: "16px" }}
+        />
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "8px", marginBottom: "8px" }}>
-          <div>
-            <label style={{ display: "block", marginBottom: "4px", fontWeight: "bold" }}>
-              {feedbackType === "event"
-                ? "Event Title"
-                : feedbackType === "faculty"
-                ? "Faculty / Topic"
-                : feedbackType === "general"
-                ? "General Topic"
-                : "Semester Topic"}
-            </label>
-            <input
-              value={feedbackSubject}
-              onChange={(e) => setFeedbackSubject(e.target.value)}
-              placeholder={
-                feedbackType === "event"
-                  ? "Enter the event name"
-                  : feedbackType === "faculty"
-                  ? "Enter the faculty name or topic"
-                  : feedbackType === "general"
-                  ? "Enter the feedback topic"
-                  : "Enter the semester feedback title"
-              }
-              style={{ width: "100%", padding: "8px", fontSize: "14px" }}
-            />
-          </div>
-        </div>
+        <input
+          value={feedbackSubject}
+          onChange={(e) => setFeedbackSubject(e.target.value)}
+          placeholder={
+            feedbackType === "event" ? "Event Title" :
+            feedbackType === "faculty" ? "Faculty / Topic" :
+            feedbackType === "general" ? "General Topic" : "Semester Topic"
+          }
+          style={{ width: "100%", padding: "12px", borderRadius: "12px", border: "1px solid #cbd5e1", fontSize: "14px", marginBottom: "16px" }}
+        />
 
-        <div style={{ marginBottom: "12px" }}>
-          <label style={{ display: "block", marginBottom: "4px", fontWeight: "bold" }}>Feedback Expiry</label>
+        <div style={{ marginBottom: "16px" }}>
+          <label style={{ display: "block", marginBottom: "6px", fontWeight: "500", color: "#475569" }}>Feedback Expiry (Optional)</label>
           <input
             type="datetime-local"
             value={feedbackAvailableUntil}
             onChange={(e) => setFeedbackAvailableUntil(e.target.value)}
-            style={{ width: "100%", padding: "8px", fontSize: "14px" }}
+            style={{ width: "100%", padding: "12px", borderRadius: "12px", border: "1px solid #cbd5e1", fontSize: "14px" }}
           />
-          <small style={{ color: "#555" }}>Optional: make this form available until a specific date/time.</small>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "8px", marginBottom: "8px" }}>
-          <div>
-            <label style={{ fontSize: "12px", fontWeight: "bold", display: "block", marginBottom: "4px" }}>Department:</label>
-            <select 
-              value={feedbackDepartment} 
-              onChange={(e) => setFeedbackDepartment(e.target.value)}
-              disabled={isFacultyFA}
-              style={{ width: "100%", padding: "6px", fontSize: "13px" }}
-            >
-              <option value="">Select Dept</option>
-              <option value="all">All Departments</option>
-              <option value="CSE">CSE</option>
-              <option value="ECE">ECE</option>
-              <option value="EEE">EEE</option>
-              <option value="MECH">MECH</option>
-              <option value="CIVIL">CIVIL</option>
-            </select>
-          </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px", marginBottom: "20px" }}>
+          <select value={feedbackDepartment} onChange={(e) => setFeedbackDepartment(e.target.value)} disabled={isFacultyFA} style={{ padding: "12px", borderRadius: "12px", border: "1px solid #cbd5e1" }}>
+            <option value="">Select Dept</option>
+            <option value="all">All Departments</option>
+            <option value="CSE">CSE</option>
+            <option value="ECE">ECE</option>
+            <option value="EEE">EEE</option>
+            <option value="MECH">MECH</option>
+          </select>
           
-          <div>
-            <label style={{ fontSize: "12px", fontWeight: "bold", display: "block", marginBottom: "4px" }}>Year:</label>
-            <select 
-              value={feedbackYear} 
-              onChange={(e) => setFeedbackYear(e.target.value)}
-              disabled={isFacultyFA}
-              style={{ width: "100%", padding: "6px", fontSize: "13px" }}
-            >
-              <option value="">Select Year</option>
-              <option value="all">All Years</option>
-              <option value="1">1st Year</option>
-              <option value="2">2nd Year</option>
-              <option value="3">3rd Year</option>
-              <option value="4">4th Year</option>
-            </select>
-          </div>
+          <select value={feedbackYear} onChange={(e) => setFeedbackYear(e.target.value)} disabled={isFacultyFA} style={{ padding: "12px", borderRadius: "12px", border: "1px solid #cbd5e1" }}>
+            <option value="">Select Year</option>
+            <option value="all">All Years</option>
+            <option value="1">1st Year</option>
+            <option value="2">2nd Year</option>
+            <option value="3">3rd Year</option>
+            <option value="4">4th Year</option>
+          </select>
           
-          <div>
-            <label style={{ fontSize: "12px", fontWeight: "bold", display: "block", marginBottom: "4px" }}>Section:</label>
-            <select 
-              value={feedbackSection} 
-              onChange={(e) => setFeedbackSection(e.target.value)}
-              disabled={isFacultyFA}
-              style={{ width: "100%", padding: "6px", fontSize: "13px" }}
-            >
-              <option value="">Select Section</option>
-              <option value="all">All Sections</option>
-              <option value="A">A</option>
-              <option value="B">B</option>
-              <option value="C">C</option>
-            </select>
-          </div>
+          <select value={feedbackSection} onChange={(e) => setFeedbackSection(e.target.value)} disabled={isFacultyFA} style={{ padding: "12px", borderRadius: "12px", border: "1px solid #cbd5e1" }}>
+            <option value="">Select Section</option>
+            <option value="all">All Sections</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+          </select>
           
-          <div>
-            <label style={{ fontSize: "12px", fontWeight: "bold", display: "block", marginBottom: "4px" }}>Semester:</label>
-            <select 
-              value={feedbackSemester} 
-              onChange={(e) => setFeedbackSemester(e.target.value)}
-              style={{ width: "100%", padding: "6px", fontSize: "13px" }}
-            >
-              <option value="">Select Semester</option>
-              <option value="1">Semester 1</option>
-              <option value="2">Semester 2</option>
-              <option value="3">Semester 3</option>
-              <option value="4">Semester 4</option>
-              <option value="5">Semester 5</option>
-              <option value="6">Semester 6</option>
-              <option value="7">Semester 7</option>
-              <option value="8">Semester 8</option>
-            </select>
-          </div>
+          <select value={feedbackSemester} onChange={(e) => setFeedbackSemester(e.target.value)} style={{ padding: "12px", borderRadius: "12px", border: "1px solid #cbd5e1" }}>
+            <option value="">Select Semester</option>
+            {[1,2,3,4,5,6,7,8].map(s => <option key={s} value={s}>Semester {s}</option>)}
+          </select>
         </div>
          
-        <button onClick={handleCreateFeedbackForm}>Create Feedback Form</button>
-      </section>
+        <button onClick={handleCreateFeedbackForm} style={{ padding: "12px 24px", backgroundColor: "#667eea", color: "white", border: "none", borderRadius: "12px", fontWeight: "600", cursor: "pointer" }}>
+          ✨ Create Feedback Form
+        </button>
+      </div>
 
-      <section style={{ marginBottom: "24px" }}>
-        <h2>Student Comments Dashboard</h2>
-        <p style={{ marginBottom: "12px" }}>
-          Select a feedback category below to view only comments for that category. Student identities are hidden.
-        </p>
-        <div style={{ overflowX: "auto" }}>
-          <table border="1" style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ backgroundColor: "#f2f2f2" }}>
-                {feedbackCategories.map((category) => (
-                  <th key={category.value} style={{ padding: "10px", textAlign: "center" }}>
-                    {category.label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                {feedbackCategories.map((category) => (
-                  <td key={category.value} style={{ padding: "12px", textAlign: "center" }}>
-                    <Link
-                      to={`/staff/comments/${category.value}`}
-                      style={{
-                        display: "inline-block",
-                        padding: "10px 16px",
-                        backgroundColor: "#1976d2",
-                        color: "white",
-                        borderRadius: "6px",
-                        textDecoration: "none",
-                      }}
-                    >
-                      View {category.label} Comments
-                    </Link>
-                  </td>
-                ))}
-              </tr>
-            </tbody>
-          </table>
+      {/* Comments Dashboard */}
+      <div style={{ 
+        backgroundColor: "white", 
+        borderRadius: "20px", 
+        padding: "32px",
+        marginBottom: "32px",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+        border: "1px solid #e2e8f0"
+      }}>
+        <h2 style={{ margin: "0 0 16px 0", fontSize: "24px", fontWeight: "600", color: "#1e293b" }}>💬 Student Comments Dashboard</h2>
+        <p style={{ marginBottom: "20px", color: "#64748b" }}>Select a feedback category to view comments. Student identities are hidden.</p>
+        
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px" }}>
+          {feedbackCategories.map((category) => (
+            <Link
+              key={category.value}
+              to={`/staff/comments/${category.value}`}
+              style={{
+                padding: "16px",
+                backgroundColor: "#f8fafc",
+                borderRadius: "12px",
+                textDecoration: "none",
+                textAlign: "center",
+                fontWeight: "600",
+                color: "#667eea",
+                border: "1px solid #e2e8f0",
+                transition: "all 0.2s ease"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "#eef2ff";
+                e.currentTarget.style.transform = "translateY(-2px)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "#f8fafc";
+                e.currentTarget.style.transform = "translateY(0)";
+              }}
+            >
+              📝 {category.label} Comments
+            </Link>
+          ))}
         </div>
-      </section>
+      </div>
 
-      <section style={{ marginBottom: "24px" }}>
-        <h2>Feedback Response Summary</h2>
+      {/* Feedback Response Summary */}
+      <div style={{ 
+        backgroundColor: "white", 
+        borderRadius: "20px", 
+        padding: "32px",
+        marginBottom: "32px",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+        border: "1px solid #e2e8f0"
+      }}>
+        <h2 style={{ margin: "0 0 24px 0", fontSize: "24px", fontWeight: "600", color: "#1e293b" }}>📊 Feedback Response Summary</h2>
         {loadingFeedbackResults ? (
-          <p>Loading feedback results...</p>
+          <p style={{ textAlign: "center", color: "#64748b" }}>Loading feedback results...</p>
         ) : !Array.isArray(feedbackSummaryForms) || feedbackSummaryForms.length === 0 ? (
-          <p>No aggregated feedback available yet.</p>
+          <div style={{ textAlign: "center", padding: "60px", backgroundColor: "#f8fafc", borderRadius: "16px" }}>
+            <p style={{ color: "#64748b" }}>No aggregated feedback available yet.</p>
+          </div>
         ) : (
           feedbackSummaryForms.map((form, formIndex) => {
             const formType = form.form_type || "semester";
@@ -1363,57 +1311,58 @@ export default function StaffDashboard() {
 
             if (summaryRows.length === 0) {
               return (
-                <div key={formKey} style={{ border: "1px solid #ccc", padding: "12px", marginBottom: "16px" }}>
-                  <strong>{form.title}</strong>
-                  <p style={{ margin: "6px 0" }}>No aggregated feedback available.</p>
+                <div key={formKey} style={{ border: "1px solid #e2e8f0", borderRadius: "16px", padding: "20px", marginBottom: "20px" }}>
+                  <strong style={{ fontSize: "16px", color: "#1e293b" }}>{form.title}</strong>
+                  <p style={{ margin: "8px 0 0", color: "#64748b" }}>No aggregated feedback available.</p>
                 </div>
               );
             }
 
             return (
-              <div key={formKey} style={{ border: "1px solid #ccc", padding: "12px", marginBottom: "16px" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <strong>{form.title}</strong>
+              <div key={formKey} style={{ border: "1px solid #e2e8f0", borderRadius: "16px", padding: "20px", marginBottom: "20px" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "12px", marginBottom: "12px" }}>
+                  <strong style={{ fontSize: "16px", color: "#1e293b" }}>{form.title}</strong>
                   <button
                     onClick={() => handleDeleteFeedbackSummary(form.form_id ?? form.id)}
                     style={{
-                      padding: "6px 12px",
-                      backgroundColor: "#f44336",
+                      padding: "6px 16px",
+                      backgroundColor: "#ef4444",
                       color: "white",
                       border: "none",
-                      borderRadius: "4px",
+                      borderRadius: "8px",
                       cursor: "pointer",
+                      fontSize: "13px"
                     }}
                   >
-                    Delete Summary
+                    🗑️ Delete Summary
                   </button>
                 </div>
-                <p style={{ margin: "6px 0" }}>
+                <p style={{ margin: "6px 0", fontSize: "13px", color: "#64748b" }}>
                   Type: {formType === "event" ? "Event" : formType === "faculty" ? "Faculty" : formType === "general" ? "General" : "Semester"} Feedback
                   {form.semester ? ` • Semester ${form.semester}` : ""}
                   {form.department && form.department !== "all" ? ` • ${form.department}` : ""}
                   {form.year && form.year !== "all" ? ` • Year ${form.year}` : ""}
                   {form.section && form.section !== "all" ? ` • Section ${form.section}` : ""}
                 </p>
-                <p style={{ margin: "6px 0" }}>Responses: {form.total_responses ?? responses.length}</p>
+                <p style={{ margin: "6px 0 16px", fontSize: "13px", color: "#64748b" }}>Responses: {form.total_responses ?? responses.length}</p>
                 <div style={{ overflowX: "auto" }}>
-                  <table border="1" style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse" }}>
                     <thead>
-                      <tr style={{ backgroundColor: "#f2f2f2" }}>
-                        <th style={{ padding: "10px" }}>{formType === "faculty" ? "Staff" : formType === "semester" || formType === "course" ? "Subject" : "Feedback"}</th>
-                        {formType !== "faculty" && <th style={{ padding: "10px" }}>Faculty</th>}
+                      <tr style={{ backgroundColor: "#f8fafc", borderBottom: "2px solid #e2e8f0" }}>
+                        <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", color: "#475569" }}>{formType === "faculty" ? "Staff" : formType === "semester" || formType === "course" ? "Subject" : "Feedback"}</th>
+                        {formType !== "faculty" && <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", color: "#475569" }}>Faculty</th>}
                         {criteriaKeys.map((key) => (
-                          <th key={key} style={{ padding: "10px" }}>{getCriterionLabel(key)}</th>
+                          <th key={key} style={{ padding: "12px", textAlign: "center", fontWeight: "600", color: "#475569" }}>{getCriterionLabel(key)}</th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {summaryRows.map((row) => (
-                        <tr key={row.key}>
-                          <td style={{ padding: "10px" }}>{row.label}</td>
-                          {formType !== "faculty" && <td style={{ padding: "10px" }}>{row.faculty || "-"}</td>}
+                        <tr key={row.key} style={{ borderBottom: "1px solid #e2e8f0" }}>
+                          <td style={{ padding: "12px", color: "#334155" }}>{row.label}</td>
+                          {formType !== "faculty" && <td style={{ padding: "12px", color: "#667eea" }}>{row.faculty || "-"}</td>}
                           {criteriaKeys.map((key) => (
-                            <td key={key} style={{ padding: "10px", textAlign: "center" }}>{row.averageRatings[key]}</td>
+                            <td key={key} style={{ padding: "12px", textAlign: "center", fontWeight: "500", color: "#1e293b" }}>{row.averageRatings[key]}</td>
                           ))}
                         </tr>
                       ))}
@@ -1424,127 +1373,139 @@ export default function StaffDashboard() {
             );
           })
         )}
-      </section>
+      </div>
 
-      <section style={{ marginBottom: "24px" }}>
-        <h2>Existing Feedback Forms</h2>
+      {/* Existing Feedback Forms */}
+      <div style={{ 
+        backgroundColor: "white", 
+        borderRadius: "20px", 
+        padding: "32px",
+        marginBottom: "32px",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+        border: "1px solid #e2e8f0"
+      }}>
+        <h2 style={{ margin: "0 0 24px 0", fontSize: "24px", fontWeight: "600", color: "#1e293b" }}>📋 Existing Feedback Forms</h2>
         {feedbackForms.length === 0 ? (
-          <p>No feedback forms created yet.</p>
-        ) : (
-          feedbackForms.map((form) => (
-            <div key={form.id} style={{ border: "1px solid #ccc", padding: "12px", marginBottom: "12px" }}>
-              <strong>{form.title}</strong>
-              <p>{form.description}</p>
-              <p>
-                Type: {form.form_type || form.feedback_type || "Semester Feedback"}
-                {form.semester ? " - Semester " + form.semester : ""}
-                {form.department && form.department !== "all" ? ", " + form.department : ""}
-                {form.year && form.year !== "all" ? " " + form.year : ""}
-                {form.section && form.section !== "all" ? " " + form.section : ""}
-              </p>
-              {form.available_until && (
-                <p>Available until: {new Date(form.available_until).toLocaleString()}</p>
-              )}
-              <button onClick={() => handleDeleteFeedbackForm(form.id)}>
-                Delete Feedback Form
-              </button>
-            </div>
-          ))
-        )}
-      </section>
-
-      <h2>Notifications</h2>
-
-      {notifications.length === 0 ? (
-        <p>No notifications</p>
-      ) : (
-        notifications.map((n) => (
-          <div key={n.id}>
-            <strong>{n.title}</strong>
-            <p>{n.message}</p>
-
-            {n.file && (
-              <a
-                href={`http://127.0.0.1:8000${n.file}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                View File
-              </a>
-            )}
-
-            <button onClick={() => handleDelete(n.id)}>Delete</button>
-
-            <hr />
+          <div style={{ textAlign: "center", padding: "60px", backgroundColor: "#f8fafc", borderRadius: "16px" }}>
+            <p style={{ color: "#64748b" }}>No feedback forms created yet.</p>
           </div>
-        ))
-      )}
+        ) : (
+          <div style={{ display: "grid", gap: "16px" }}>
+            {feedbackForms.map((form) => (
+              <div key={form.id} style={{ border: "1px solid #e2e8f0", borderRadius: "16px", padding: "20px", backgroundColor: "#fafcff" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
+                  <div>
+                    <strong style={{ fontSize: "16px", color: "#1e293b" }}>{form.title}</strong>
+                    <p style={{ margin: "8px 0", color: "#475569" }}>{form.description}</p>
+                    <p style={{ margin: "4px 0", fontSize: "13px", color: "#64748b" }}>
+                      Type: {form.form_type || form.feedback_type || "Semester Feedback"}
+                      {form.semester ? ` - Semester ${form.semester}` : ""}
+                      {form.department && form.department !== "all" ? `, ${form.department}` : ""}
+                      {form.year && form.year !== "all" ? ` Year ${form.year}` : ""}
+                      {form.section && form.section !== "all" ? ` Section ${form.section}` : ""}
+                    </p>
+                    {form.available_until && (
+                      <p style={{ margin: "4px 0", fontSize: "12px", color: "#f59e0b" }}>Available until: {new Date(form.available_until).toLocaleString()}</p>
+                    )}
+                  </div>
+                  <button onClick={() => handleDeleteFeedbackForm(form.id)} style={{ padding: "8px 16px", backgroundColor: "#ef4444", color: "white", border: "none", borderRadius: "8px", cursor: "pointer" }}>
+                    Delete Form
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
-      <table border="1">
-        <thead>
-          <tr>
-            <th>Student</th>
-            <th>Subject</th>
-            <th>File</th>
-            <th>Submitted At</th>
-            <th>Marks</th>
-            <th>Feedback</th>
-            <th>Action</th>
-          </tr>
-        </thead>
+      {/* Notifications List */}
+      <div style={{ 
+        backgroundColor: "white", 
+        borderRadius: "20px", 
+        padding: "32px",
+        marginBottom: "32px",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+        border: "1px solid #e2e8f0"
+      }}>
+        <h2 style={{ margin: "0 0 24px 0", fontSize: "24px", fontWeight: "600", color: "#1e293b" }}>🔔 Notifications</h2>
+        {notifications.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "60px", backgroundColor: "#f8fafc", borderRadius: "16px" }}>
+            <p style={{ color: "#64748b" }}>No notifications</p>
+          </div>
+        ) : (
+          <div style={{ display: "grid", gap: "16px" }}>
+            {notifications.map((n) => (
+              <div key={n.id} style={{ border: "1px solid #e2e8f0", borderRadius: "16px", padding: "20px", backgroundColor: "#fafcff" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px" }}>
+                  <div>
+                    <strong style={{ fontSize: "16px", color: "#1e293b" }}>{n.title}</strong>
+                    <p style={{ margin: "8px 0", color: "#475569" }}>{n.message}</p>
+                    {n.file && (
+                      <a href={`http://127.0.0.1:8000${n.file}`} target="_blank" rel="noreferrer" style={{ color: "#667eea", textDecoration: "none", fontSize: "14px" }}>
+                        📎 View File
+                      </a>
+                    )}
+                  </div>
+                  <button onClick={() => handleDelete(n.id)} style={{ padding: "6px 16px", backgroundColor: "#ef4444", color: "white", border: "none", borderRadius: "8px", cursor: "pointer" }}>
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
-        <tbody>
-          {submissions.map((s) => (
-            <tr key={s.id}>
-              <td>{s.student_name}</td>
-              <td>{s.subject}</td>
-              <td>
-                <a
-                  href={`http://127.0.0.1:8000${s.file}`}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  View File
-                </a>
-               </td>
-              <td>{s.submitted_at}</td>
-
-              <td>
-                <input
-                  type="number"
-                  value={s.marks}
-                  onChange={(e) =>
-                    handleChange(s.id, "marks", e.target.value)
-                  }
-                  style={{ width: "80px", padding: "4px" }}
-                />
-               </td>
-
-              <td>
-                <input
-                  type="text"
-                  value={s.feedback}
-                  onChange={(e) =>
-                    handleChange(s.id, "feedback", e.target.value)
-                  }
-                  style={{ width: "150px", padding: "4px" }}
-                />
-               </td>
-
-              <td>
-                <button
-                  onClick={() =>
-                    handleGrade(s.id, s.marks, s.feedback)
-                  }
-                  style={{ padding: "4px 8px" }}
-                >
-                  Submit
-                </button>
-               </td>
-             </tr>
-          ))}
-        </tbody>
-      </table>
+      {/* Student Submissions */}
+      <div style={{ 
+        backgroundColor: "white", 
+        borderRadius: "20px", 
+        padding: "32px",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+        border: "1px solid #e2e8f0"
+      }}>
+        <h2 style={{ margin: "0 0 24px 0", fontSize: "24px", fontWeight: "600", color: "#1e293b" }}>📝 Student Submissions</h2>
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ backgroundColor: "#f8fafc", borderBottom: "2px solid #e2e8f0" }}>
+                <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", color: "#475569" }}>Student</th>
+                <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", color: "#475569" }}>Subject</th>
+                <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", color: "#475569" }}>File</th>
+                <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", color: "#475569" }}>Submitted At</th>
+                <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", color: "#475569" }}>Marks</th>
+                <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", color: "#475569" }}>Feedback</th>
+                <th style={{ padding: "12px", textAlign: "left", fontWeight: "600", color: "#475569" }}>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {submissions.map((s, idx) => (
+                <tr key={s.id} style={{ borderBottom: "1px solid #e2e8f0", backgroundColor: idx % 2 === 0 ? "white" : "#fafcff" }}>
+                  <td style={{ padding: "12px", color: "#334155" }}>{s.student_name}</td>
+                  <td style={{ padding: "12px", color: "#334155" }}>{s.subject}</td>
+                  <td style={{ padding: "12px" }}>
+                    <a href={`http://127.0.0.1:8000${s.file}`} target="_blank" rel="noreferrer" style={{ color: "#667eea", textDecoration: "none" }}>
+                      📄 View File
+                    </a>
+                  </td>
+                  <td style={{ padding: "12px", color: "#64748b", fontSize: "14px" }}>{s.submitted_at}</td>
+                  <td style={{ padding: "12px" }}>
+                    <input type="number" value={s.marks} onChange={(e) => handleChange(s.id, "marks", e.target.value)} style={{ width: "80px", padding: "8px", borderRadius: "8px", border: "1px solid #cbd5e1" }} />
+                  </td>
+                  <td style={{ padding: "12px" }}>
+                    <input type="text" value={s.feedback} onChange={(e) => handleChange(s.id, "feedback", e.target.value)} style={{ width: "150px", padding: "8px", borderRadius: "8px", border: "1px solid #cbd5e1" }} />
+                  </td>
+                  <td style={{ padding: "12px" }}>
+                    <button onClick={() => handleGrade(s.id, s.marks, s.feedback)} style={{ padding: "6px 16px", backgroundColor: "#10b981", color: "white", border: "none", borderRadius: "8px", cursor: "pointer" }}>
+                      Submit Grade
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
-} 
+}

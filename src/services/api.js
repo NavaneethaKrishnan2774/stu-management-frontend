@@ -22,7 +22,7 @@ const API = {
   post: async (endpoint, body, token) => {
     const headers = {};
     let payload = body;
-    const normalizedToken = normalizeToken(token) || getTokenFromStorage();
+    const normalizedToken = token === false ? null : normalizeToken(token) || getTokenFromStorage();
 
     if (!(body instanceof FormData)) {
       headers["Content-Type"] = "application/json";

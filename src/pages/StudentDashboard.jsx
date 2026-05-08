@@ -18,6 +18,7 @@ export default function StudentDashboard() {
   const [feedbackRatings, setFeedbackRatings] = useState({});
   const [feedbackComments, setFeedbackComments] = useState("");
   const [feedbackStatus, setFeedbackStatus] = useState("");
+  const [placementDrives, setPlacementDrives] = useState([]);
   const [attendancePercentage, setAttendancePercentage] = useState(null);
 
   const navigate = useNavigate();
@@ -169,6 +170,20 @@ export default function StudentDashboard() {
       if (!res.ok) return;
       const data = await res.json();
       setAttendancePercentage(data.percentage ?? 0);
+    } catch (err) {
+      console.error(err);
+    }
+  }, [token]);
+
+  const fetchPlacementDrives = useCallback(async () => {
+    try {
+      if (!token) return;
+      const res = await fetch(`${BASE_URL}/api/students/student/placement-drives/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      setPlacementDrives(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
     }
@@ -494,8 +509,9 @@ export default function StudentDashboard() {
     fetchNotifications();
     fetchCount();
     fetchAttendancePercentage();
+    fetchPlacementDrives();
     fetchFacultyOptions();
-  }, [fetchNotifications, fetchCount, fetchAttendancePercentage, fetchFacultyOptions]);
+  }, [fetchNotifications, fetchCount, fetchAttendancePercentage, fetchPlacementDrives, fetchFacultyOptions]);
 
   useEffect(() => {
     if (!selectedSemester) {
@@ -505,7 +521,6 @@ export default function StudentDashboard() {
       return;
     }
 
-    // Clear selection when the semester changes so the new form list can reset correctly.
     setSelectedFeedbackFormId("");
     fetchFeedbackForms();
     fetchSemesterSubjects();
@@ -534,41 +549,214 @@ export default function StudentDashboard() {
 
   const lowAttendance = attendancePercentage !== null && attendancePercentage < 75;
 
+  const nextPlacementDrive = placementDrives
+    .filter((drive) => new Date(drive.drive_date) >= new Date())
+    .sort((a, b) => new Date(a.drive_date) - new Date(b.drive_date))[0];
+
+  const totalPlacementDrives = placementDrives.length;
+  const totalPlacedStudents = placementDrives.reduce((sum, drive) => sum + (drive.total_placed || 0), 0);
+  const totalApplications = placementDrives.reduce((sum, drive) => sum + (drive.total_applied || 0), 0);
+
   return (
-    <div>
-      <h2>Student Dashboard</h2>
-
-      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "16px", marginBottom: "20px" }}>
-        <div style={{ flex: "1 1 320px" }}>
-          <h3>Summary</h3>
-          <div style={{ padding: "16px", border: "1px solid #ddd", borderRadius: "12px", background: "#fafafa" }}>
-            <p style={{ margin: "8px 0", fontWeight: 600 }}>Attendance: {attendancePercentage !== null ? `${attendancePercentage}%` : "Loading..."}</p>
-            <p style={{ margin: "8px 0" }}>Next Exam: Math - 25th</p>
-            <p style={{ margin: "8px 0" }}>Placement: Infosys Drive Soon</p>
+    <div style={{ 
+      maxWidth: "1400px", 
+      margin: "0 auto", 
+      padding: "24px",
+      fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
+      backgroundColor: "#f8fafc",
+      minHeight: "100vh"
+    }}>
+      <div style={{ 
+        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        borderRadius: "24px",
+        padding: "32px",
+        marginBottom: "32px",
+        color: "white",
+        boxShadow: "0 10px 40px rgba(0,0,0,0.1)"
+      }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
+          <div>
+            <h1 style={{ fontSize: "32px", fontWeight: "700", margin: "0 0 8px 0" }}>Welcome Back, Student!</h1>
+            <p style={{ opacity: 0.9, margin: 0 }}>Department: {department} | Year: {year} | Section: {section}</p>
           </div>
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <button onClick={handleBellClick} style={{ padding: "10px 14px", borderRadius: "8px", cursor: "pointer" }}>
-            🔔 {count > 0 && <span>({count})</span>}
+          <button 
+            onClick={handleBellClick} 
+            style={{
+              background: "rgba(255,255,255,0.2)",
+              border: "none",
+              padding: "12px 20px",
+              borderRadius: "50px",
+              cursor: "pointer",
+              color: "white",
+              fontSize: "18px",
+              fontWeight: "500",
+              backdropFilter: "blur(10px)",
+              transition: "all 0.3s ease"
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.3)"}
+            onMouseLeave={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.2)"}
+          >
+            🔔 Notifications {count > 0 && <span style={{ 
+              background: "#ff4757", 
+              borderRadius: "50%", 
+              padding: "2px 8px", 
+              marginLeft: "8px",
+              fontSize: "14px"
+            }}>{count}</span>}
           </button>
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(120px,1fr))", gap: "14px", marginBottom: "24px" }}>
+      {open && (
+        <div style={{
+          position: "fixed",
+          top: "100px",
+          right: "24px",
+          width: "400px",
+          backgroundColor: "white",
+          borderRadius: "16px",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.15)",
+          zIndex: 1000,
+          maxHeight: "500px",
+          overflow: "auto"
+        }}>
+          <div style={{ 
+            padding: "20px", 
+            borderBottom: "1px solid #e2e8f0",
+            backgroundColor: "#f8fafc",
+            borderRadius: "16px 16px 0 0"
+          }}>
+            <h3 style={{ margin: 0, fontSize: "18px" }}>🔔 Notifications</h3>
+          </div>
+          <div style={{ padding: "16px" }}>
+            {notifications.length === 0 ? (
+              <p style={{ textAlign: "center", color: "#64748b", padding: "20px" }}>No new notifications</p>
+            ) : (
+              notifications.map((n) => (
+                <div key={n.id} style={{ 
+                  marginBottom: "16px", 
+                  padding: "12px", 
+                  backgroundColor: "#f1f5f9", 
+                  borderRadius: "12px",
+                  borderLeft: "3px solid #667eea"
+                }}>
+                  <strong style={{ display: "block", marginBottom: "8px", color: "#1e293b" }}>{n.title}</strong>
+                  <p style={{ margin: "0 0 8px 0", fontSize: "14px", color: "#475569" }}>{n.message}</p>
+                  {n.file && (
+                    <a
+                      href={`http://127.0.0.1:8000${n.file}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ color: "#667eea", fontSize: "14px", textDecoration: "none" }}
+                    >
+                      📎 View Attachment
+                    </a>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      <div style={{ 
+        display: "grid", 
+        gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", 
+        gap: "24px", 
+        marginBottom: "32px" 
+      }}>
+        <div style={{ 
+          backgroundColor: "white", 
+          borderRadius: "20px", 
+          padding: "24px",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+          border: "1px solid #e2e8f0"
+        }}>
+          <h3 style={{ margin: "0 0 16px 0", fontSize: "18px", fontWeight: "600", color: "#1e293b" }}>📊 Attendance Overview</h3>
+          <div style={{ marginBottom: "16px" }}>
+            <div style={{ fontSize: "48px", fontWeight: "700", color: lowAttendance ? "#ef4444" : "#10b981" }}>
+              {attendancePercentage !== null ? `${attendancePercentage}%` : "Loading..."}
+            </div>
+            <div style={{ height: "8px", backgroundColor: "#e2e8f0", borderRadius: "4px", marginTop: "12px", overflow: "hidden" }}>
+              <div style={{ 
+                width: `${attendancePercentage || 0}%`, 
+                height: "100%", 
+                backgroundColor: lowAttendance ? "#ef4444" : "#10b981",
+                transition: "width 0.3s ease"
+              }} />
+            </div>
+          </div>
+          {lowAttendance && (
+            <div style={{ 
+              backgroundColor: "#fee2e2", 
+              padding: "12px", 
+              borderRadius: "12px", 
+              color: "#991b1b",
+              fontSize: "14px"
+            }}>
+              ⚠️ Low Attendance: Please improve your attendance.
+            </div>
+          )}
+        </div>
+
+        <div style={{ 
+          backgroundColor: "white", 
+          borderRadius: "20px", 
+          padding: "24px",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+          border: "1px solid #e2e8f0"
+        }}>
+          <h3 style={{ margin: "0 0 16px 0", fontSize: "18px", fontWeight: "600", color: "#1e293b" }}>💼 Placement Summary</h3>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+            <div>
+              <div style={{ fontSize: "28px", fontWeight: "700", color: "#667eea" }}>{totalPlacementDrives}</div>
+              <div style={{ fontSize: "13px", color: "#64748b" }}>Active Drives</div>
+            </div>
+            <div>
+              <div style={{ fontSize: "28px", fontWeight: "700", color: "#667eea" }}>{totalApplications}</div>
+              <div style={{ fontSize: "13px", color: "#64748b" }}>Applications</div>
+            </div>
+            <div>
+              <div style={{ fontSize: "28px", fontWeight: "700", color: "#10b981" }}>{totalPlacedStudents}</div>
+              <div style={{ fontSize: "13px", color: "#64748b" }}>Students Placed</div>
+            </div>
+            <div>
+              <div style={{ fontSize: "14px", fontWeight: "600", color: "#f59e0b" }}>{nextPlacementDrive ? `${nextPlacementDrive.company_name}` : "No upcoming"}</div>
+              <div style={{ fontSize: "12px", color: "#64748b" }}>Next Drive</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ 
+        display: "grid", 
+        gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", 
+        gap: "16px", 
+        marginBottom: "40px" 
+      }}>
         {moduleNavItems.map((item) => (
           <button
             key={item.path}
             onClick={() => navigate(item.path)}
             style={{
-              height: "100px",
-              borderRadius: "50%",
+              padding: "24px 16px",
+              borderRadius: "16px",
               border: "none",
-              background: "#0b74ff",
-              color: "#fff",
-              fontWeight: 700,
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              color: "white",
+              fontWeight: "600",
+              fontSize: "16px",
               cursor: "pointer",
-              boxShadow: "0 4px 10px rgba(0,0,0,0.08)",
+              transition: "transform 0.2s ease, box-shadow 0.2s ease",
+              boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-4px)";
+              e.currentTarget.style.boxShadow = "0 12px 20px rgba(0,0,0,0.15)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 4px 6px rgba(0,0,0,0.1)";
             }}
           >
             {item.label}
@@ -576,152 +764,110 @@ export default function StudentDashboard() {
         ))}
       </div>
 
-      <div style={{ marginBottom: "24px", padding: "14px", background: "#f1f8ff", border: "1px solid #dceeff", borderRadius: "10px" }}>
-        <strong>Note:</strong> Your timetable is now available in the Academic module.
-
-        {open && (
-          <div
-            style={{
-              position: "absolute",
-              top: "40px",
-              right: "0",
-              width: "320px",
-              border: "1px solid #ccc",
-              background: "#fff",
-              padding: "10px",
-              maxHeight: "320px",
-              overflowY: "auto",
-              zIndex: 1000,
-            }}
-          >
-            {notifications.length === 0 ? (
-              <p>No notifications</p>
-            ) : (
-              notifications.map((n) => (
-                <div key={n.id} style={{ marginBottom: "10px" }}>
-                  <strong>{n.title}</strong>
-                  <p>{n.message}</p>
-                  {n.file && (
-                    <a
-                      href={`http://127.0.0.1:8000${n.file}`}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      View File
-                    </a>
-                  )}
-                  <hr />
-                </div>
-              ))
-            )}
-          </div>
-        )}
-      </div>
-
-      <div style={{ marginTop: "24px" }}>
-        <h3>Attendance</h3>
-        <p>
-          Current attendance: {attendancePercentage !== null ? `${attendancePercentage}%` : "Loading..."}
-        </p>
-        {lowAttendance && (
-          <p style={{ color: "red", fontWeight: "bold" }}>
-            ⚠ Low Attendance: Please improve your attendance.
-          </p>
-        )}
-      </div>
-
-      <div style={{ marginTop: "24px", padding: "20px", border: "1px solid #ddd", borderRadius: "14px", background: "#f9fbff" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+      <div style={{ 
+        backgroundColor: "white", 
+        borderRadius: "20px", 
+        padding: "32px",
+        marginBottom: "32px",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+        border: "1px solid #e2e8f0"
+      }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px", marginBottom: "24px" }}>
           <div>
-            <h3 style={{ margin: 0 }}>Approved Timetable</h3>
-            <p style={{ margin: "6px 0 0", color: "#555" }}>
-              View your class timetable for the selected semester. Only HOD-approved entries are shown.
-            </p>
+            <h2 style={{ margin: 0, fontSize: "24px", fontWeight: "600", color: "#1e293b" }}>📅 Timetable</h2>
+            <p style={{ margin: "8px 0 0 0", color: "#64748b" }}>View your approved class schedule</p>
           </div>
           <button
             onClick={handleDownloadTimetable}
             disabled={!semesterTimetableEntries.length || !selectedSemester}
-            style={{ padding: "10px 16px", borderRadius: "10px", background: "#1976d2", color: "white", border: "none", cursor: semesterTimetableEntries.length ? "pointer" : "not-allowed" }}
+            style={{
+              padding: "10px 20px",
+              borderRadius: "12px",
+              background: semesterTimetableEntries.length ? "#667eea" : "#cbd5e1",
+              color: "white",
+              border: "none",
+              cursor: semesterTimetableEntries.length ? "pointer" : "not-allowed",
+              fontWeight: "500",
+              transition: "background 0.2s ease"
+            }}
           >
-            Download Timetable
+            📥 Download Timetable
           </button>
         </div>
 
+        <div style={{ marginBottom: "24px" }}>
+          <label style={{ display: "block", marginBottom: "8px", fontWeight: "500", color: "#475569" }}>Select Semester</label>
+          <select
+            value={selectedSemester}
+            onChange={(e) => setSelectedSemester(e.target.value)}
+            style={{
+              width: "100%",
+              maxWidth: "300px",
+              padding: "12px",
+              borderRadius: "12px",
+              border: "1px solid #cbd5e1",
+              fontSize: "14px",
+              backgroundColor: "white"
+            }}
+          >
+            <option value="">-- Select Semester --</option>
+            <option value="1">Semester 1</option>
+            <option value="2">Semester 2</option>
+            <option value="3">Semester 3</option>
+            <option value="4">Semester 4</option>
+            <option value="5">Semester 5</option>
+            <option value="6">Semester 6</option>
+            <option value="7">Semester 7</option>
+            <option value="8">Semester 8</option>
+          </select>
+        </div>
+
         {selectedSemester === "" ? (
-          <p style={{ marginTop: "18px" }}>Choose a semester below to load your approved timetable.</p>
+          <p style={{ textAlign: "center", color: "#64748b", padding: "40px" }}>Choose a semester to load your approved timetable.</p>
         ) : semesterTimetableEntries.length === 0 ? (
-          <p style={{ marginTop: "18px" }}>
-            No approved timetable is available for Semester {selectedSemester} yet.
-          </p>
+          <p style={{ textAlign: "center", color: "#64748b", padding: "40px" }}>No approved timetable is available for Semester {selectedSemester} yet.</p>
         ) : (
-          <div style={{ overflowX: "auto", marginTop: "18px" }}>
-            <table
-              border="1"
-              cellPadding="10"
-              cellSpacing="0"
-              style={{ width: "100%", borderCollapse: "collapse", minWidth: "860px" }}
-            >
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "860px" }}>
               <thead>
-                <tr style={{ background: "#f4f6fb" }}>
-                  <th style={{ textAlign: "left", width: "170px", padding: "12px" }}>
-                    Time / Day
-                  </th>
+                <tr style={{ backgroundColor: "#f8fafc", borderBottom: "2px solid #e2e8f0" }}>
+                  <th style={{ textAlign: "left", padding: "16px", fontWeight: "600", color: "#475569" }}>Time / Day</th>
                   {timetableDayHeaders.map((day) => (
-                    <th key={day} style={{ textAlign: "center", padding: "12px" }}>
-                      {day}
-                    </th>
+                    <th key={day} style={{ textAlign: "center", padding: "16px", fontWeight: "600", color: "#475569" }}>{day}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {timetableRows.map((row) =>
                   row.isBreak ? (
-                    <tr key={row.key} style={{ background: "#eef2f8" }}>
-                      <td
-                        style={{
-                          padding: "12px",
-                          fontWeight: 700,
-                          color: "#0b4d91",
-                          background: "#eef2f8",
-                        }}
-                      >
-                        {row.time}
-                      </td>
-                      <td colSpan={timetableDayHeaders.length} style={{ textAlign: "center", padding: "12px", fontWeight: 700, color: "#0b4d91" }}>
+                    <tr key={row.key} style={{ backgroundColor: "#f1f5f9" }}>
+                      <td style={{ padding: "16px", fontWeight: "700", color: "#475569" }}>{row.time}</td>
+                      <td colSpan={timetableDayHeaders.length} style={{ textAlign: "center", padding: "16px", fontWeight: "700", color: "#475569" }}>
                         {row.label}
                       </td>
                     </tr>
                   ) : (
-                    <tr key={row.key}>
-                      <td style={{ padding: "12px", fontWeight: 600, minWidth: "170px", background: "#fafafa" }}>
+                    <tr key={row.key} style={{ borderBottom: "1px solid #e2e8f0" }}>
+                      <td style={{ padding: "16px", fontWeight: "600", backgroundColor: "#fafcff", minWidth: "170px" }}>
                         <div>{row.time}</div>
-                        <div style={{ marginTop: "6px", color: "#666" }}>{row.label}</div>
+                        <div style={{ marginTop: "6px", fontSize: "13px", color: "#64748b" }}>{row.label}</div>
                       </td>
                       {timetableDayHeaders.map((day) => {
                         const entry = semesterTimetableEntries.find((item) => {
                           const periodValue = String(item.period || "");
-                          return (
-                            item.day === day &&
-                            (periodValue === row.key || periodValue === row.key.replace(/^P/, ""))
-                          );
+                          return item.day === day && (periodValue === row.key || periodValue === row.key.replace(/^P/, ""));
                         });
                         return (
-                          <td key={`${day}-${row.key}`} style={{ padding: "12px", minWidth: "140px", verticalAlign: "top" }}>
+                          <td key={`${day}-${row.key}`} style={{ padding: "16px", minWidth: "140px", verticalAlign: "top" }}>
                             {entry ? (
                               <div>
-                                <div style={{ fontWeight: 700 }}>{entry.subject_code || entry.subject}</div>
-                                <div style={{ marginTop: "6px", color: "#333" }}>{entry.subject}</div>
-                                <div style={{ marginTop: "8px", fontSize: "12px", color: "#555" }}>
-                                  {entry.faculty}
-                                </div>
-                                {entry.credits ? (
-                                  <div style={{ marginTop: "6px", fontSize: "12px", color: "#888" }}>
-                                    Credits: {entry.credits}
-                                  </div>
-                                ) : null}
+                                <div style={{ fontWeight: "700", color: "#1e293b" }}>{entry.subject_code || entry.subject}</div>
+                                <div style={{ marginTop: "6px", fontSize: "14px", color: "#475569" }}>{entry.subject}</div>
+                                <div style={{ marginTop: "8px", fontSize: "12px", color: "#667eea" }}>{entry.faculty}</div>
+                                {entry.credits && <div style={{ marginTop: "6px", fontSize: "11px", color: "#94a3b8" }}>Credits: {entry.credits}</div>}
                               </div>
                             ) : (
-                              <span style={{ color: "#999" }}>—</span>
+                              <span style={{ color: "#cbd5e1" }}>—</span>
                             )}
                           </td>
                         );
@@ -732,20 +878,21 @@ export default function StudentDashboard() {
               </tbody>
             </table>
 
-            <div style={{ overflowX: 'auto', marginTop: '24px' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '850px' }}>
+            <div style={{ overflowX: 'auto', marginTop: '32px' }}>
+              <h3 style={{ fontSize: "18px", fontWeight: "600", marginBottom: "16px" }}>Subject Details</h3>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr style={{ backgroundColor: '#f9fafb' }}>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', borderBottom: '1px solid #e5e7eb' }}>Subject Code</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', borderBottom: '1px solid #e5e7eb' }}>Abbreviation</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', borderBottom: '1px solid #e5e7eb' }}>Subject Title</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', borderBottom: '1px solid #e5e7eb' }}>Credits</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', borderBottom: '1px solid #e5e7eb' }}>Periods / Week</th>
-                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', borderBottom: '1px solid #e5e7eb' }}>Faculty in Charge</th>
+                  <tr style={{ backgroundColor: "#f8fafc", borderBottom: "2px solid #e2e8f0" }}>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: "#475569" }}>Subject Code</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: "#475569" }}>Abbreviation</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: "#475569" }}>Subject Title</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: "#475569" }}>Credits</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: "#475569" }}>Periods/Week</th>
+                    <th style={{ padding: '12px', textAlign: 'left', fontWeight: '600', color: "#475569" }}>Faculty</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {semesterSubjects.map((subject) => {
+                  {semesterSubjects.map((subject, idx) => {
                     const entry = semesterTimetableEntries.find(
                       (item) => item.subject_code === subject.subject_code || item.subject === subject.subject
                     );
@@ -753,13 +900,13 @@ export default function StudentDashboard() {
                       (item) => item.subject_code === subject.subject_code || item.subject === subject.subject
                     ).length;
                     return (
-                      <tr key={`${subject.subject_code}-${subject.subject}`}>
-                        <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>{subject.subject_code || 'N/A'}</td>
-                        <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>{subject.subject_code || subject.subject}</td>
-                        <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>{subject.subject || 'N/A'}</td>
-                        <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>{entry?.credits ?? '-'}</td>
-                        <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>{periods}</td>
-                        <td style={{ padding: '12px', borderBottom: '1px solid #e5e7eb' }}>{entry?.faculty || 'Unassigned'}</td>
+                      <tr key={`${subject.subject_code}-${idx}`} style={{ borderBottom: "1px solid #e2e8f0" }}>
+                        <td style={{ padding: '12px', color: "#334155" }}>{subject.subject_code || 'N/A'}</td>
+                        <td style={{ padding: '12px', color: "#334155" }}>{subject.subject_code || subject.subject}</td>
+                        <td style={{ padding: '12px', color: "#334155" }}>{subject.subject || 'N/A'}</td>
+                        <td style={{ padding: '12px', color: "#334155" }}>{entry?.credits ?? '-'}</td>
+                        <td style={{ padding: '12px', color: "#334155" }}>{periods}</td>
+                        <td style={{ padding: '12px', color: "#667eea", fontWeight: "500" }}>{entry?.faculty || 'Unassigned'}</td>
                       </tr>
                     );
                   })}
@@ -770,106 +917,106 @@ export default function StudentDashboard() {
         )}
       </div>
 
-      <div style={{ marginTop: "32px" }}>
-        <h3>Select Semester</h3>
-        <select
-          value={selectedSemester}
-          onChange={(e) => setSelectedSemester(e.target.value)}
-          style={{ width: "100%", height: "40px", marginTop: "8px" }}
-        >
-          <option value="">-- Select Semester --</option>
-          <option value="1">Semester 1</option>
-          <option value="2">Semester 2</option>
-          <option value="3">Semester 3</option>
-          <option value="4">Semester 4</option>
-          <option value="5">Semester 5</option>
-          <option value="6">Semester 6</option>
-          <option value="7">Semester 7</option>
-          <option value="8">Semester 8</option>
-        </select>
-
-        {selectedSemester !== "" && feedbackForms.length > 1 && (
-          <div style={{ marginTop: "20px" }}>
-            <label>
-              Select active feedback form:
-              <select
-                value={selectedFeedbackFormId}
-                onChange={(e) => setSelectedFeedbackFormId(e.target.value)}
-                style={{ width: "100%", height: "40px", marginTop: "8px" }}
-              >
-                {feedbackForms.map((form) => (
-                  <option key={form.id} value={form.id}>
-                    {form.title} ({form.subject_code || form.subject})
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-        )}
+      <div style={{ 
+        backgroundColor: "white", 
+        borderRadius: "20px", 
+        padding: "32px",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+        border: "1px solid #e2e8f0"
+      }}>
+        <h2 style={{ margin: "0 0 24px 0", fontSize: "24px", fontWeight: "600", color: "#1e293b" }}>📝 Feedback</h2>
 
         {selectedSemester === "" ? (
-          <p style={{ marginTop: "20px" }}>Please choose a semester to continue.</p>
+          <p style={{ textAlign: "center", color: "#64748b", padding: "40px" }}>Please choose a semester to continue.</p>
         ) : feedbackForms.length === 0 ? (
-          <p style={{ marginTop: "20px" }}>
-            No active feedback forms are available for this semester.
-          </p>
+          <p style={{ textAlign: "center", color: "#64748b", padding: "40px" }}>No active feedback forms are available for this semester.</p>
         ) : (
-          <div style={{ marginTop: "24px", border: "1px solid #ccc", padding: "20px" }}>
+          <>
+            {feedbackForms.length > 1 && (
+              <div style={{ marginBottom: "24px" }}>
+                <label style={{ display: "block", marginBottom: "8px", fontWeight: "500", color: "#475569" }}>Select Feedback Form:</label>
+                <select
+                  value={selectedFeedbackFormId}
+                  onChange={(e) => setSelectedFeedbackFormId(e.target.value)}
+                  style={{
+                    width: "100%",
+                    maxWidth: "400px",
+                    padding: "12px",
+                    borderRadius: "12px",
+                    border: "1px solid #cbd5e1",
+                    fontSize: "14px",
+                    backgroundColor: "white"
+                  }}
+                >
+                  {feedbackForms.map((form) => (
+                    <option key={form.id} value={form.id}>
+                      {form.title} ({form.subject_code || form.subject})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             {!selectedFeedbackForm ? (
               <p>Please select a feedback form from the menu above.</p>
             ) : (
-              <>
-                <div style={{ marginBottom: "16px" }}>
-                  <strong>Active Form:</strong> {selectedFeedbackForm.title} <br />
-                  <small>
-                    {formTypeLabels[selectedFormType] || "Semester"} Feedback
-                    {selectedFeedbackForm.subject ? ` — ${selectedFeedbackForm.subject}` : ""}
-                    {selectedFeedbackForm.subject_code ? ` (${selectedFeedbackForm.subject_code})` : ""}
-                    {selectedFeedbackForm.available_until ? ` — available until ${new Date(selectedFeedbackForm.available_until).toLocaleString()}` : ''}
-                  </small>
+              <div>
+                <div style={{ 
+                  backgroundColor: "#f1f5f9", 
+                  padding: "16px", 
+                  borderRadius: "12px", 
+                  marginBottom: "24px",
+                  borderLeft: "4px solid #667eea"
+                }}>
+                  <strong style={{ fontSize: "16px", color: "#1e293b" }}>📋 {selectedFeedbackForm.title}</strong>
+                  <div style={{ marginTop: "8px", fontSize: "14px", color: "#64748b" }}>
+                    Type: {formTypeLabels[selectedFormType] || "Semester"} Feedback
+                    {selectedFeedbackForm.subject && ` — ${selectedFeedbackForm.subject}`}
+                    {selectedFeedbackForm.subject_code && ` (${selectedFeedbackForm.subject_code})`}
+                    {selectedFeedbackForm.available_until && ` — Available until ${new Date(selectedFeedbackForm.available_until).toLocaleString()}`}
+                  </div>
                 </div>
 
                 {selectedFormType !== "semester" && (
-                  <div style={{ marginBottom: "20px", padding: "14px", background: "#f9fafe", borderRadius: "10px" }}>
-                    <p style={{ margin: 0, fontWeight: 700 }}>Feedback topic:</p>
-                    <p style={{ margin: "8px 0" }}>{selectedFeedbackForm.subject || "No topic provided"}</p>
+                  <div style={{ marginBottom: "24px", padding: "16px", backgroundColor: "#fef3c7", borderRadius: "12px" }}>
+                    <strong style={{ display: "block", marginBottom: "8px", color: "#92400e" }}>Topic:</strong>
+                    <p style={{ margin: 0, color: "#78350f" }}>{selectedFeedbackForm.subject || "No topic provided"}</p>
                     {selectedFeedbackForm.subject_code && (
-                      <p style={{ margin: "4px 0", color: "#555" }}>Type: {selectedFeedbackForm.subject_code}</p>
+                      <p style={{ marginTop: "8px", fontSize: "13px", color: "#92400e" }}>Code: {selectedFeedbackForm.subject_code}</p>
                     )}
                   </div>
                 )}
 
                 {isSubjectForm ? (
-                  <div style={{ overflowX: "auto", marginBottom: "20px" }}>
-                    <table
-                      border="1"
-                      cellPadding="8"
-                      cellSpacing="0"
-                      style={{ width: "100%", borderCollapse: "collapse" }}
-                    >
+                  <div style={{ overflowX: "auto", marginBottom: "24px" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
                       <thead>
-                        <tr>
-                          <th style={{ textAlign: "left", width: "28%", padding: "10px" }}>Criteria</th>
+                        <tr style={{ backgroundColor: "#f8fafc", borderBottom: "2px solid #e2e8f0" }}>
+                          <th style={{ textAlign: "left", padding: "16px", fontWeight: "600", color: "#475569", minWidth: "200px" }}>Criteria</th>
                           {semesterSubjects.map((subject) => {
                             const subjectKey = subject.subject_code || subject.subject;
                             return (
-                              <th key={subjectKey} style={{ textAlign: "center", padding: "10px" }}>
-                                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                                  <select
-                                    value={subjectStaffSelections[subjectKey] || ""}
-                                    onChange={(e) => handleStaffSelection(subjectKey, e.target.value)}
-                                    style={{ width: "100%", height: "34px" }}
-                                  >
-                                    <option value="">Select staff</option>
-                                    {facultyOptions.map((staff) => (
-                                      <option key={staff.username} value={staff.username}>
-                                        {staff.first_name || staff.username} {staff.last_name || ''}
-                                      </option>
-                                    ))}
-                                  </select>
-                                  <div style={{ fontWeight: 600, marginTop: "4px" }}>
-                                    {subject.subject_code ? `${subject.subject_code} - ${subject.subject}` : subject.subject}
-                                  </div>
+                              <th key={subjectKey} style={{ textAlign: "center", padding: "16px", minWidth: "180px" }}>
+                                <select
+                                  value={subjectStaffSelections[subjectKey] || ""}
+                                  onChange={(e) => handleStaffSelection(subjectKey, e.target.value)}
+                                  style={{
+                                    width: "100%",
+                                    padding: "8px",
+                                    borderRadius: "8px",
+                                    border: "1px solid #cbd5e1",
+                                    marginBottom: "12px"
+                                  }}
+                                >
+                                  <option value="">Select staff</option>
+                                  {facultyOptions.map((staff) => (
+                                    <option key={staff.username} value={staff.username}>
+                                      {staff.first_name || staff.username} {staff.last_name || ''}
+                                    </option>
+                                  ))}
+                                </select>
+                                <div style={{ fontWeight: 600, fontSize: "14px", color: "#1e293b" }}>
+                                  {subject.subject_code ? `${subject.subject_code}` : subject.subject}
                                 </div>
                               </th>
                             );
@@ -878,19 +1025,25 @@ export default function StudentDashboard() {
                       </thead>
                       <tbody>
                         {currentFeedbackCriteria.map((criterion) => (
-                          <tr key={criterion.key}>
-                            <td style={{ textAlign: "left", padding: "10px" }}>{criterion.label}</td>
+                          <tr key={criterion.key} style={{ borderBottom: "1px solid #e2e8f0" }}>
+                            <td style={{ textAlign: "left", padding: "16px", color: "#334155" }}>{criterion.label}</td>
                             {semesterSubjects.map((subject) => {
                               const subjectKey = subject.subject_code || subject.subject;
                               return (
-                                <td key={`${subjectKey}-${criterion.key}`} style={{ textAlign: "center", padding: "10px" }}>
+                                <td key={`${subjectKey}-${criterion.key}`} style={{ textAlign: "center", padding: "16px" }}>
                                   <input
                                     type="number"
                                     min="1"
                                     max="5"
                                     value={feedbackRatings[`${subjectKey}-${criterion.key}`] || ""}
                                     onChange={(e) => handleRatingChange(subjectKey, criterion.key, e.target.value)}
-                                    style={{ width: "80px", textAlign: "center" }}
+                                    style={{
+                                      width: "80px",
+                                      padding: "8px",
+                                      textAlign: "center",
+                                      borderRadius: "8px",
+                                      border: "1px solid #cbd5e1"
+                                    }}
                                     placeholder="1-5"
                                   />
                                 </td>
@@ -902,17 +1055,12 @@ export default function StudentDashboard() {
                     </table>
                   </div>
                 ) : (
-                  <div style={{ overflowX: "auto", marginBottom: "20px" }}>
-                    <table
-                      border="1"
-                      cellPadding="8"
-                      cellSpacing="0"
-                      style={{ width: "100%", borderCollapse: "collapse" }}
-                    >
+                  <div style={{ overflowX: "auto", marginBottom: "24px" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse" }}>
                       <thead>
-                        <tr>
-                          <th style={{ textAlign: "left", width: "70%", padding: "10px" }}>Criteria</th>
-                          <th style={{ textAlign: "center", padding: "10px" }}>Rating</th>
+                        <tr style={{ backgroundColor: "#f8fafc", borderBottom: "2px solid #e2e8f0" }}>
+                          <th style={{ textAlign: "left", padding: "16px", fontWeight: "600", color: "#475569" }}>Criteria</th>
+                          <th style={{ textAlign: "center", padding: "16px", fontWeight: "600", color: "#475569", width: "150px" }}>Rating</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -920,15 +1068,12 @@ export default function StudentDashboard() {
                           if (criterion.section) {
                             return (
                               <tr key={`section-${criterion.section}`}>
-                                <td
-                                  colSpan="2"
-                                  style={{
-                                    textAlign: "left",
-                                    padding: "10px",
-                                    background: "#eef2ff",
-                                    fontWeight: 700,
-                                  }}
-                                >
+                                <td colSpan="2" style={{ 
+                                  padding: "16px", 
+                                  backgroundColor: "#f1f5f9", 
+                                  fontWeight: 700, 
+                                  color: "#1e293b"
+                                }}>
                                   {criterion.section}
                                 </td>
                               </tr>
@@ -936,15 +1081,21 @@ export default function StudentDashboard() {
                           }
 
                           return (
-                            <tr key={criterion.key}>
-                              <td style={{ textAlign: "left", padding: "10px" }}>{criterion.label}</td>
-                              <td style={{ textAlign: "center", padding: "10px" }}>
+                            <tr key={criterion.key} style={{ borderBottom: "1px solid #e2e8f0" }}>
+                              <td style={{ textAlign: "left", padding: "16px", color: "#334155" }}>{criterion.label}</td>
+                              <td style={{ textAlign: "center", padding: "16px" }}>
                                 {criterion.type === "textarea" ? (
                                   <textarea
                                     rows={3}
                                     value={feedbackRatings[criterion.key] || ""}
                                     onChange={(e) => handleRatingChange(null, criterion.key, e.target.value)}
-                                    style={{ width: "100%" }}
+                                    style={{
+                                      width: "100%",
+                                      padding: "8px",
+                                      borderRadius: "8px",
+                                      border: "1px solid #cbd5e1",
+                                      fontSize: "14px"
+                                    }}
                                     placeholder="Write your suggestion"
                                   />
                                 ) : (
@@ -954,7 +1105,13 @@ export default function StudentDashboard() {
                                     max="5"
                                     value={feedbackRatings[criterion.key] || ""}
                                     onChange={(e) => handleRatingChange(null, criterion.key, e.target.value)}
-                                    style={{ width: "80px", textAlign: "center" }}
+                                    style={{
+                                      width: "80px",
+                                      padding: "8px",
+                                      textAlign: "center",
+                                      borderRadius: "8px",
+                                      border: "1px solid #cbd5e1"
+                                    }}
                                     placeholder="1-5"
                                   />
                                 )}
@@ -967,32 +1124,60 @@ export default function StudentDashboard() {
                   </div>
                 )}
 
-                <div style={{ marginTop: "20px" }}>
-                  <label>
-                    Comments and suggestions:
-                    <textarea
-                      rows={4}
-                      value={feedbackComments}
-                      onChange={(e) => setFeedbackComments(e.target.value)}
-                      style={{ width: "100%", marginTop: "10px" }}
-                      placeholder="Write your feedback and suggestions here"
-                    />
+                <div style={{ marginBottom: "20px" }}>
+                  <label style={{ display: "block", marginBottom: "8px", fontWeight: "500", color: "#475569" }}>
+                    Additional Comments:
                   </label>
+                  <textarea
+                    rows={4}
+                    value={feedbackComments}
+                    onChange={(e) => setFeedbackComments(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "12px",
+                      borderRadius: "12px",
+                      border: "1px solid #cbd5e1",
+                      fontSize: "14px",
+                      fontFamily: "inherit"
+                    }}
+                    placeholder="Write your feedback and suggestions here"
+                  />
                 </div>
 
                 <button
                   onClick={handleSubmitFeedback}
-                  style={{ marginTop: "16px", padding: "10px 16px" }}
+                  style={{
+                    padding: "12px 24px",
+                    backgroundColor: "#667eea",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "12px",
+                    fontWeight: "600",
+                    fontSize: "16px",
+                    cursor: "pointer",
+                    transition: "background 0.2s ease"
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "#5a67d8"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "#667eea"}
                 >
-                  Submit Feedback
+                  ✨ Submit Feedback
                 </button>
 
                 {feedbackStatus && (
-                  <p style={{ color: "green", marginTop: "14px" }}>{feedbackStatus}</p>
+                  <div style={{ 
+                    marginTop: "16px", 
+                    padding: "12px", 
+                    backgroundColor: "#d1fae5", 
+                    borderRadius: "12px", 
+                    color: "#065f46",
+                    fontSize: "14px"
+                  }}>
+                    ✅ {feedbackStatus}
+                  </div>
                 )}
-              </>
+              </div>
             )}
-          </div>
+          </>
         )}
       </div>
     </div>

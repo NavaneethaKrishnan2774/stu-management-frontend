@@ -13,7 +13,7 @@ export default function AdminLogin() {
         username: mobile,
         password,
         designation: "admin",
-      });
+      }, false);
 
       const { access, role } = res;
       if (!access) {

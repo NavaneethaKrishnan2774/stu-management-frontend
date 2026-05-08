@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import API from "../services/api";
 
 export default function PlacementOfficerDashboard() {
   const navigate = useNavigate();
   const [userInfo, setUserInfo] = useState(null);
+  const [driveCount, setDriveCount] = useState(0);
+  const [driveError, setDriveError] = useState("");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -27,15 +30,23 @@ export default function PlacementOfficerDashboard() {
     });
   }, [navigate]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    localStorage.removeItem("designation");
-    localStorage.removeItem("department");
-    localStorage.removeItem("year");
-    localStorage.removeItem("section");
-    navigate("/staff/login");
-  };
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    API.get("api/students/placement/drives/", null, token)
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setDriveCount(data.length);
+        } else {
+          setDriveError("Unexpected server response for placement drives.");
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        setDriveError("Unable to fetch drive summary.");
+      });
+  }, []);
 
   const menuItems = [
     {
@@ -60,7 +71,7 @@ export default function PlacementOfficerDashboard() {
       icon: "🏢",
       color: "#fff3e0",
       borderColor: "#ff9800",
-      action: () => alert("Coming soon"),
+      action: () => navigate("/placement/companies"),
     },
     {
       title: "Student Statistics",
@@ -95,6 +106,24 @@ export default function PlacementOfficerDashboard() {
         </button>
       </div>
 
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px", marginBottom: "24px" }}>
+        <div style={{ backgroundColor: "#e3f2fd", border: "1px solid #90caf9", borderRadius: "12px", padding: "20px" }}>
+          <div style={{ fontSize: "14px", color: "#0d47a1", marginBottom: "10px", fontWeight: 700 }}>Active Drives</div>
+          <div style={{ fontSize: "36px", fontWeight: 700, color: "#0d47a1" }}>{driveCount}</div>
+          <div style={{ marginTop: "8px", color: "#37474f", fontSize: "13px" }}>Drives created by you</div>
+        </div>
+        <div style={{ backgroundColor: "#e8f5e9", border: "1px solid #81c784", borderRadius: "12px", padding: "20px" }}>
+          <div style={{ fontSize: "14px", color: "#2e7d32", marginBottom: "10px", fontWeight: 700 }}>Placement Tools</div>
+          <div style={{ fontSize: "32px", fontWeight: 700, color: "#2e7d32" }}>Ready</div>
+          <div style={{ marginTop: "8px", color: "#37474f", fontSize: "13px" }}>Manage drives and student placements</div>
+        </div>
+        <div style={{ backgroundColor: "#fff3e0", border: "1px solid #ffb74d", borderRadius: "12px", padding: "20px" }}>
+          <div style={{ fontSize: "14px", color: "#ef6c00", marginBottom: "10px", fontWeight: 700 }}>Status</div>
+          <div style={{ fontSize: "32px", fontWeight: 700, color: "#ef6c00" }}>{driveError ? "Error" : "Live"}</div>
+          <div style={{ marginTop: "8px", color: "#37474f", fontSize: "13px" }}>{driveError || "Drive summary loaded"}</div>
+        </div>
+      </div>
+
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "16px" }}>
         {menuItems.map((item, index) => (
           <div
@@ -124,6 +153,7 @@ export default function PlacementOfficerDashboard() {
           </div>
         ))}
       </div>
+
     </div>
   );
 }
