@@ -48,6 +48,16 @@ export default function PlacementOfficerDashboard() {
       });
   }, []);
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("designation");
+    localStorage.removeItem("department");
+    localStorage.removeItem("year");
+    localStorage.removeItem("section");
+    navigate("/staff/login");
+  };
+
   const menuItems = [
     {
       title: "Placement Drives",
@@ -74,12 +84,12 @@ export default function PlacementOfficerDashboard() {
       action: () => navigate("/placement/companies"),
     },
     {
-      title: "Student Statistics",
-      description: "View placement statistics",
+      title: "Assessment Management",
+      description: "Create assessments and review department results",
       icon: "📊",
       color: "#e8f5e9",
       borderColor: "#4caf50",
-      action: () => alert("Coming soon"),
+      action: () => navigate("/placement/assessments"),
     },
   ];
 

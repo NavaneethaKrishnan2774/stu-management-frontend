@@ -1,121 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as XLSX from "xlsx";
-
-const initialCompanies = [
-  {
-    id: 1,
-    name: "Microsoft India",
-    type: "IT",
-    batch: "2025",
-    rating: 4.8,
-    departments: ["CSE", "IT", "ECE", "AIDS"],
-    location: "Hyderabad",
-    conductedDate: "2025-03-10",
-    venue: "Main Auditorium, Campus",
-    package: "18.5 LPA",
-    highestPackage: "18.5 LPA",
-    avgPackage: "18.2 LPA",
-    designation: "Software Engineer",
-    hrName: "Priya Sharma",
-    hrEmail: "priya.s@microsoft.com",
-    hrPhone: "9876543210",
-    description: "Global tech leader for software development and cloud solutions.",
-    placedStudents: [
-      { name: "Aarav Mehta", roll: "CS2101", dept: "CSE", batch: "2025", cgpa: 9.2, package: "18.5 LPA", role: "SDE" },
-      { name: "Ishita Verma", roll: "CS2105", dept: "CSE", batch: "2025", cgpa: 9.0, package: "18 LPA", role: "SDE" },
-      { name: "Rohan Sharma", roll: "EC2108", dept: "ECE", batch: "2025", cgpa: 8.8, package: "18 LPA", role: "Software Engineer" },
-    ],
-    rounds: [
-      { name: "Online Aptitude", cleared: 85, total: 210 },
-      { name: "Technical Interview", cleared: 42, total: 85 },
-      { name: "HR + Managerial", cleared: 3, total: 42 },
-    ],
-  },
-  {
-    id: 2,
-    name: "Tesla Motors",
-    type: "Core",
-    batch: "2024",
-    rating: 4.5,
-    departments: ["MECH", "EEE", "ECE", "CIVIL"],
-    location: "Bangalore",
-    conductedDate: "2024-11-20",
-    venue: "Engineering Block, Seminar Hall",
-    package: "22 LPA",
-    highestPackage: "22 LPA",
-    avgPackage: "21.5 LPA",
-    designation: "Electrical Engineer",
-    hrName: "Vikram Raj",
-    hrEmail: "vikram@tesla.com",
-    hrPhone: "9988776655",
-    description: "Electric vehicles, energy innovation, and automation.",
-    placedStudents: [
-      { name: "Neha Gupta", roll: "ME3102", dept: "MECH", batch: "2024", cgpa: 8.9, package: "22 LPA", role: "Electrical Engineer" },
-      { name: "Aditya Kumar", roll: "EE405", dept: "EEE", batch: "2024", cgpa: 8.7, package: "21 LPA", role: "Controls Engineer" },
-    ],
-    rounds: [
-      { name: "Aptitude + Technical", cleared: 56, total: 150 },
-      { name: "Design & Interview", cleared: 18, total: 56 },
-      { name: "HR Round", cleared: 2, total: 18 },
-    ],
-  },
-  {
-    id: 3,
-    name: "Google India",
-    type: "IT",
-    batch: "2026",
-    rating: 4.9,
-    departments: ["CSE", "IT", "AIDS"],
-    location: "Bangalore",
-    conductedDate: "2025-04-15",
-    venue: "Virtual (Online)",
-    package: "32 LPA",
-    highestPackage: "35 LPA",
-    avgPackage: "33 LPA",
-    designation: "Software Engineer",
-    hrName: "Anjali Verma",
-    hrEmail: "anjali@google.com",
-    hrPhone: "9876500003",
-    description: "Search engine, cloud computing, and AI solutions.",
-    placedStudents: [
-      { name: "Vikram Singh", roll: "CS2180", dept: "CSE", batch: "2026", cgpa: 9.6, package: "35 LPA", role: "SDE" },
-      { name: "Priya K", roll: "AI2122", dept: "AIDS", batch: "2026", cgpa: 9.4, package: "32 LPA", role: "Software Engineer" },
-    ],
-    rounds: [
-      { name: "Coding Round", cleared: 120, total: 350 },
-      { name: "Technical Interview", cleared: 28, total: 120 },
-      { name: "Googleyness Round", cleared: 2, total: 28 },
-    ],
-  },
-  {
-    id: 4,
-    name: "Amazon",
-    type: "IT",
-    batch: "2025",
-    rating: 4.6,
-    departments: ["CSE", "IT", "ECE"],
-    location: "Chennai",
-    conductedDate: "2025-02-18",
-    venue: "Virtual (Online)",
-    package: "26 LPA",
-    highestPackage: "28 LPA",
-    avgPackage: "27 LPA",
-    designation: "SDE-1",
-    hrName: "Rahul Nair",
-    hrEmail: "rahul@amazon.com",
-    hrPhone: "9123456780",
-    description: "E-commerce, cloud computing, and AI-driven solutions.",
-    placedStudents: [
-      { name: "Sanya Kapoor", roll: "CS2120", dept: "CSE", batch: "2025", cgpa: 9.4, package: "28 LPA", role: "SDE-1" },
-      { name: "Kunal Sharma", roll: "IT2103", dept: "IT", batch: "2025", cgpa: 8.9, package: "26 LPA", role: "SDE" },
-    ],
-    rounds: [
-      { name: "Online Assessment", cleared: 94, total: 270 },
-      { name: "Technical Round", cleared: 28, total: 94 },
-      { name: "Bar Raiser + HR", cleared: 2, total: 28 },
-    ],
-  },
-];
+import API from "../services/api";
 
 const batchStudentCounts = { "2024": 450, "2025": 520, "2026": 380 };
 
@@ -138,6 +23,58 @@ const getDriveStatus = (dateStr) => {
   if (d.getTime() === today.getTime()) return "ongoing";
   if (d < today) return "completed";
   return "upcoming";
+};
+
+const parseDriveCriteria = (criteria) => {
+  if (!criteria) return {};
+  try {
+    return typeof criteria === "string" ? JSON.parse(criteria) : criteria;
+  } catch {
+    return {};
+  }
+};
+
+const normalizeDriveToCompany = (drive) => {
+  const criteria = parseDriveCriteria(drive.criteria);
+  const departments = Array.isArray(criteria.eligible_departments)
+    ? criteria.eligible_departments
+    : drive.department
+    ? [drive.department]
+    : [];
+  const batch = Array.isArray(criteria.eligible_batches)
+    ? criteria.eligible_batches[0]
+    : drive.drive_date
+    ? new Date(drive.drive_date).getFullYear().toString()
+    : "2025";
+  const packageValue = criteria.package ? `${criteria.package} LPA` : "TBD";
+
+  return {
+    id: drive.id,
+    name: drive.company_name || "Unknown Company",
+    type: criteria.company_type || "IT",
+    batch,
+    rating: criteria.rating || 4.0,
+    departments,
+    location: criteria.company_location || criteria.location || "Campus",
+    conductedDate: drive.drive_date || new Date().toISOString().slice(0, 10),
+    venue: criteria.company_location || "Campus",
+    package: packageValue,
+    highestPackage: criteria.highestPackage || packageValue,
+    avgPackage: criteria.avgPackage || packageValue,
+    designation: criteria.job_role || "Position",
+    hrName: criteria.contact_person?.name || "HR Team",
+    hrEmail: criteria.contact_person?.email || "hr@company.com",
+    hrPhone: criteria.contact_person?.phone || "9999999999",
+    description: criteria.company_history || `Campus placement drive for ${drive.company_name}`,
+    placedStudents: [],
+    rounds: Array.isArray(criteria.rounds)
+      ? criteria.rounds.map((round) => ({
+          name: round.title || round.name || "Round",
+          cleared: round.cleared || 0,
+          total: round.total || 0,
+        }))
+      : [],
+  };
 };
 
 const generateEmailMessage = (company) => {
@@ -183,7 +120,9 @@ const getAvatarColor = (name) => {
 };
 
 export default function PlacementCompanies() {
-  const [companies, setCompanies] = useState(initialCompanies);
+  const [companies, setCompanies] = useState([]);
+  const [loadingCompanies, setLoadingCompanies] = useState(true);
+  const [companiesError, setCompaniesError] = useState("");
   const [activeFilters, setActiveFilters] = useState({ department: null, type: null, batch: null });
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
@@ -192,7 +131,7 @@ export default function PlacementCompanies() {
   const [messageText, setMessageText] = useState("");
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [toast, setToast] = useState("");
-  const nextId = useRef(5);
+  const nextId = useRef(1);
   const [newCompany, setNewCompany] = useState({
     name: "",
     type: "IT",
@@ -216,6 +155,31 @@ export default function PlacementCompanies() {
     const timer = window.setTimeout(() => setToast(""), 2800);
     return () => window.clearTimeout(timer);
   }, [toast]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setCompaniesError("Authentication required to load companies.");
+      setLoadingCompanies(false);
+      return;
+    }
+
+    API.get("api/students/placement/drives/", null, token)
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setCompanies(data.map(normalizeDriveToCompany));
+          nextId.current = data.reduce((maxId, item) => Math.max(maxId, item.id || 0), 0) + 1;
+        } else {
+          setCompanies([]);
+          setCompaniesError("Unexpected response from server.");
+        }
+      })
+      .catch((error) => {
+        console.error("Error loading companies:", error);
+        setCompaniesError("Unable to load companies at this time.");
+      })
+      .finally(() => setLoadingCompanies(false));
+  }, []);
 
   const allDepartments = useMemo(
     () => [...new Set(companies.flatMap((company) => company.departments))].sort(),
@@ -621,6 +585,16 @@ export default function PlacementCompanies() {
           ⟳ Reset Filters
         </button>
       </div>
+
+      {loadingCompanies ? (
+        <div style={{ padding: "16px 24px", marginBottom: "24px", borderRadius: "18px", background: "#eff6ff", color: "#1e40af", fontWeight: 600 }}>
+          Loading company data...
+        </div>
+      ) : companiesError ? (
+        <div style={{ padding: "16px 24px", marginBottom: "24px", borderRadius: "18px", background: "#fee2e2", color: "#991b1b", fontWeight: 600 }}>
+          {companiesError}
+        </div>
+      ) : null}
 
       <div className="calendar-tracker-row">
         <div className="calendar-container">

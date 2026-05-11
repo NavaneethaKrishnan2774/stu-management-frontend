@@ -10,6 +10,7 @@ import StaffRegister from "./pages/StaffRegister";
 import StaffRegistrationStatus from "./pages/StaffRegistrationStatus";
 import HODLogin from "./pages/HODLogin";
 import StudentDashboard from "./pages/StudentDashboard";
+import StudentProfile from "./pages/StudentProfile";
 import StaffDashboard from "./pages/StaffDashboard";
 import HODDashboard from "./pages/HODDashboard";
 import HODStudents from "./pages/HODStudents";
@@ -28,10 +29,12 @@ import FeedbackComments from "./pages/FeedbackComments";
 
 // Placement Officer imports
 import PlacementOfficerDashboard from "./pages/PlacementOfficerDashboard";
+import PlacementAssessmentDashboard from "./pages/PlacementAssessmentDashboard";
 import PlacementStudents from "./pages/PlacementStudents";
 import PlacementCreateDrive from "./pages/PlacementCreateDrive";
 import PlacementDrivesEnhanced from "./pages/PlacementDrivesEnhanced";
 import PlacementCompanies from "./pages/PlacementCompanies";
+import HostelWardenDashboard from "./pages/HostelWardenDashboard";
 import PlacementOfficerRoute from "./components/PlacementOfficerRoute";
 
 // import modules
@@ -54,11 +57,13 @@ function App() {
         <Route path="/student/login" element={<StudentLogin />} />
         <Route path="/student/register" element={<StudentRegister />} />
         <Route path="/student/dashboard" element={<StudentDashboard />} />
+        <Route path="/student/profile" element={<StudentProfile />} />
 
         {/* Staff routes */}
         <Route path="/staff/roles" element={<StaffRoleSelection />} />
         <Route path="/staff/login" element={<StaffLogin />} />
         <Route path="/staff/register" element={<StaffRegister />} />
+        <Route path="/staff/register/:role" element={<StaffRegister />} />
         <Route path="/staff/register/status" element={<StaffRegistrationStatus />} />
         <Route path="/staff/dashboard" element={<StaffDashboard />} />
         <Route path="/hod/login" element={<HODLogin />} />
@@ -85,6 +90,9 @@ function App() {
         <Route path="/placement/create-drive" element={<PlacementOfficerRoute><PlacementCreateDrive /></PlacementOfficerRoute>} />
         <Route path="/placement/drives" element={<PlacementOfficerRoute><PlacementDrivesEnhanced /></PlacementOfficerRoute>} />
         <Route path="/placement/companies" element={<PlacementOfficerRoute><PlacementCompanies /></PlacementOfficerRoute>} />
+        <Route path="/placement/assessments" element={<PlacementOfficerRoute><PlacementAssessmentDashboard /></PlacementOfficerRoute>} />
+        <Route path="/placement/assessments/:department" element={<PlacementOfficerRoute><PlacementAssessmentDashboard /></PlacementOfficerRoute>} />
+        <Route path="/warden/dashboard" element={<HostelWardenDashboard />} />
 
         {/* ✅ ADD MODULE ROUTES HERE */}
         <Route path="/academics" element={<Academic />} />

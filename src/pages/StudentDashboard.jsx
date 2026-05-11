@@ -20,6 +20,7 @@ export default function StudentDashboard() {
   const [feedbackStatus, setFeedbackStatus] = useState("");
   const [placementDrives, setPlacementDrives] = useState([]);
   const [attendancePercentage, setAttendancePercentage] = useState(null);
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState(null);
 
   const navigate = useNavigate();
 
@@ -32,7 +33,28 @@ export default function StudentDashboard() {
     if (!token) {
       localStorage.clear();
       navigate("/login", { replace: true });
+      return;
     }
+
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch(`${BASE_URL}/api/students/profile/`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.profile_photo) {
+          const url = data.profile_photo.startsWith("http")
+            ? data.profile_photo
+            : `${BASE_URL}${data.profile_photo}`;
+          setProfilePhotoUrl(url);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchProfile();
   }, [token, navigate]);
 
   const feedbackCriteriaByType = {
@@ -392,6 +414,15 @@ export default function StudentDashboard() {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/student/login", { replace: true });
+  };
+
+  const handleProfileClick = () => {
+    navigate("/student/profile");
+  };
+
   const handleBellClick = async () => {
     const newOpen = !open;
     setOpen(newOpen);
@@ -575,35 +606,99 @@ export default function StudentDashboard() {
         boxShadow: "0 10px 40px rgba(0,0,0,0.1)"
       }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
-          <div>
-            <h1 style={{ fontSize: "32px", fontWeight: "700", margin: "0 0 8px 0" }}>Welcome Back, Student!</h1>
-            <p style={{ opacity: 0.9, margin: 0 }}>Department: {department} | Year: {year} | Section: {section}</p>
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            <div
+              onClick={handleProfileClick}
+              style={{
+                width: "60px",
+                height: "60px",
+                borderRadius: "50%",
+                backgroundColor: "rgba(255,255,255,0.2)",
+                overflow: "hidden",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                border: "3px solid rgba(255,255,255,0.3)",
+                transition: "all 0.3s ease",
+                fontSize: "24px"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "rgba(255,255,255,0.5)";
+                e.currentTarget.style.transform = "scale(1.05)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "rgba(255,255,255,0.3)";
+                e.currentTarget.style.transform = "scale(1)";
+              }}
+              title="Click to view profile"
+            >
+              {profilePhotoUrl ? (
+                <img
+                  src={profilePhotoUrl}
+                  alt="Profile"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    display: "block"
+                  }}
+                />
+              ) : (
+                "👨‍🎓"
+              )}
+            </div>
+            <div>
+              <h1 style={{ fontSize: "32px", fontWeight: "700", margin: "0 0 8px 0" }}>Welcome Back, Student!</h1>
+              <p style={{ opacity: 0.9, margin: 0 }}>Department: {department} | Year: {year} | Section: {section}</p>
+            </div>
           </div>
-          <button 
-            onClick={handleBellClick} 
-            style={{
-              background: "rgba(255,255,255,0.2)",
-              border: "none",
-              padding: "12px 20px",
-              borderRadius: "50px",
-              cursor: "pointer",
-              color: "white",
-              fontSize: "18px",
-              fontWeight: "500",
-              backdropFilter: "blur(10px)",
-              transition: "all 0.3s ease"
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.3)"}
-            onMouseLeave={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.2)"}
-          >
-            🔔 Notifications {count > 0 && <span style={{ 
-              background: "#ff4757", 
-              borderRadius: "50%", 
-              padding: "2px 8px", 
-              marginLeft: "8px",
-              fontSize: "14px"
-            }}>{count}</span>}
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <button 
+              onClick={handleLogout}
+              style={{
+                background: "rgba(255,255,255,0.2)",
+                border: "none",
+                padding: "12px 20px",
+                borderRadius: "50px",
+                cursor: "pointer",
+                color: "white",
+                fontSize: "16px",
+                fontWeight: "500",
+                backdropFilter: "blur(10px)",
+                transition: "all 0.3s ease"
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.3)"}
+              onMouseLeave={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.2)"}
+            >
+              🚪 Logout
+            </button>
+            <button 
+              onClick={handleBellClick} 
+              style={{
+                background: "rgba(255,255,255,0.2)",
+                border: "none",
+                padding: "12px 20px",
+                borderRadius: "50px",
+                cursor: "pointer",
+                color: "white",
+                fontSize: "18px",
+                fontWeight: "500",
+                backdropFilter: "blur(10px)",
+                transition: "all 0.3s ease"
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.3)"}
+              onMouseLeave={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.2)"}
+            >
+              🔔 Notifications {count > 0 && <span style={{ 
+                background: "#ff4757",
+                borderRadius: "50%", 
+                padding: "2px 8px", 
+                marginLeft: "8px",
+                fontSize: "14px"
+              }}>{count}</span>}
+            </button>
+          </div>
         </div>
       </div>
 

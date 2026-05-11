@@ -53,6 +53,8 @@ export default function StaffLogin() {
         // Route based on designation for staff
         if (storedDesignation === "placement_officer") {
           navigate("/placement/dashboard");
+        } else if (storedDesignation === "hostel_warden") {
+          navigate("/warden/dashboard");
         } else {
           navigate("/staff/dashboard");
         }

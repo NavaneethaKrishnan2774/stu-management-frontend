@@ -9,8 +9,14 @@ export default function StudentLogin() {
 
   const handleLogin = async () => {
     try {
+      const trimmedRegisterNumber = registerNumber.trim();
+      if (!trimmedRegisterNumber) {
+        alert("Please enter your register number.");
+        return;
+      }
+
       const res = await API.post("api/login/", {
-        username: registerNumber,
+        username: trimmedRegisterNumber,
         password,
         designation: "student",
       }, false);

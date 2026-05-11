@@ -1,38 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
-
-const departmentOptions = ["CSE", "ECE", "MECH", "CIVIL", "EEE"];
-const locationOptions = ["On-campus", "Off-campus", "Virtual"];
-const batchOptions = ["2024", "2025", "2026"];
-const arrearsOptions = ["Not Allowed", "Allowed (up to 2)", "Conditional"];
-const notificationOptions = ["Email & SMS", "Email Only", "SMS Only", "None"];
-const perkOptions = ["Food", "Transport", "Medical Insurance", "Work From Home", "Gym Membership", "Performance Bonus"];
-const questionTypes = ["Text Answer", "Yes/No", "Multiple Choice"];
-const roundModes = ["Online", "Offline"];
-
-const mockStudents = [
-  { id: 1, rollNo: "ENG2024001", name: "Aarav Mehta", branch: "CSE", cgpa: 9.2, tenthPercent: 95, twelfthPercent: 94, arrearsCount: 0, email: "aarav@university.edu" },
-  { id: 2, rollNo: "ENG2024002", name: "Ishita Verma", branch: "CSE", cgpa: 9.0, tenthPercent: 92, twelfthPercent: 93, arrearsCount: 0, email: "ishita@university.edu" },
-  { id: 3, rollNo: "ENG2024003", name: "Rohan Sharma", branch: "ECE", cgpa: 8.8, tenthPercent: 89, twelfthPercent: 88, arrearsCount: 0, email: "rohan@university.edu" },
-  { id: 4, rollNo: "ENG2024004", name: "Priya Singh", branch: "MECH", cgpa: 8.5, tenthPercent: 87, twelfthPercent: 85, arrearsCount: 1, email: "priya@university.edu" },
-  { id: 5, rollNo: "ENG2024005", name: "Kunal Patel", branch: "EEE", cgpa: 8.1, tenthPercent: 84, twelfthPercent: 82, arrearsCount: 2, email: "kunal@university.edu" },
-  { id: 6, rollNo: "ENG2024006", name: "Sanya Kapoor", branch: "CIVIL", cgpa: 8.4, tenthPercent: 88, twelfthPercent: 86, arrearsCount: 0, email: "sanya@university.edu" },
-  { id: 7, rollNo: "ENG2024007", name: "Nikhil Desai", branch: "IT", cgpa: 8.9, tenthPercent: 91, twelfthPercent: 90, arrearsCount: 0, email: "nikhil@university.edu" },
-  { id: 8, rollNo: "ENG2024008", name: "Meera Reddy", branch: "AIDS", cgpa: 8.2, tenthPercent: 85, twelfthPercent: 83, arrearsCount: 1, email: "meera@university.edu" },
-  { id: 9, rollNo: "ENG2024009", name: "Aditya Nair", branch: "CSE", cgpa: 7.9, tenthPercent: 80, twelfthPercent: 79, arrearsCount: 2, email: "aditya@university.edu" },
-  { id: 10, rollNo: "ENG2024010", name: "Neha Gupta", branch: "ECE", cgpa: 8.3, tenthPercent: 86, twelfthPercent: 84, arrearsCount: 0, email: "neha@university.edu" },
-  { id: 11, rollNo: "ENG2024011", name: "Tarun Jain", branch: "MECH", cgpa: 7.8, tenthPercent: 76, twelfthPercent: 78, arrearsCount: 0, email: "tarun@university.edu" },
-  { id: 12, rollNo: "ENG2024012", name: "Aisha Khan", branch: "CIVIL", cgpa: 8.6, tenthPercent: 90, twelfthPercent: 88, arrearsCount: 0, email: "aisha@university.edu" },
-  { id: 13, rollNo: "ENG2024013", name: "Vikram Joshi", branch: "EEE", cgpa: 8.0, tenthPercent: 81, twelfthPercent: 80, arrearsCount: 1, email: "vikram@university.edu" },
-  { id: 14, rollNo: "ENG2024014", name: "Rhea Malhotra", branch: "CSE", cgpa: 9.1, tenthPercent: 93, twelfthPercent: 91, arrearsCount: 0, email: "rhea@university.edu" },
-  { id: 15, rollNo: "ENG2024015", name: "Dev Shah", branch: "IT", cgpa: 7.7, tenthPercent: 75, twelfthPercent: 77, arrearsCount: 1, email: "dev@university.edu" },
-  { id: 16, rollNo: "ENG2024016", name: "Priyanka Nair", branch: "CSE", cgpa: 8.7, tenthPercent: 90, twelfthPercent: 89, arrearsCount: 0, email: "priyanka@university.edu" },
-  { id: 17, rollNo: "ENG2024017", name: "Rahul Mehta", branch: "ECE", cgpa: 8.2, tenthPercent: 84, twelfthPercent: 85, arrearsCount: 0, email: "rahul@university.edu" },
-  { id: 18, rollNo: "ENG2024018", name: "Simran Kaur", branch: "MECH", cgpa: 8.5, tenthPercent: 87, twelfthPercent: 88, arrearsCount: 0, email: "simran@university.edu" },
-  { id: 19, rollNo: "ENG2024019", name: "Ankit Verma", branch: "EEE", cgpa: 7.5, tenthPercent: 74, twelfthPercent: 76, arrearsCount: 2, email: "ankit@university.edu" },
-  { id: 20, rollNo: "ENG2024020", name: "Shreya Bose", branch: "CIVIL", cgpa: 8.3, tenthPercent: 88, twelfthPercent: 86, arrearsCount: 0, email: "shreya@university.edu" },
-];
 
 const initialDriveState = {
   id: null,
@@ -44,7 +12,7 @@ const initialDriveState = {
   jobRole: "",
   package: "",
   vacancies: "",
-  location: locationOptions[0],
+  location: "",
   driveDate: "",
   lastDate: "",
   batches: [],
@@ -63,17 +31,17 @@ const initialDriveState = {
     cgpa: "",
     tenth: "",
     twelfth: "",
-    arrears: arrearsOptions[0],
+    arrears: "",
     shortlistLimit: "",
   },
   perks: [],
   questions: [
-    { id: 1, text: "", type: questionTypes[0] },
+    { id: 1, text: "", type: "" },
   ],
-  notifications: notificationOptions[0],
+  notifications: "",
   rounds: [
-    { id: 1, title: "Aptitude Test", mode: roundModes[0], date: "", time: "", desc: "" },
-    { id: 2, title: "Technical Interview", mode: roundModes[0], date: "", time: "", desc: "" },
+    { id: 1, title: "Aptitude Test", mode: "", date: "", time: "", desc: "" },
+    { id: 2, title: "Technical Interview", mode: "", date: "", time: "", desc: "" },
   ],
   jdFile: null,
 };
@@ -440,6 +408,56 @@ export default function PlacementCreateDrive() {
   const [driveStage, setDriveStage] = useState("status-draft");
   const [sendMessage, setSendMessage] = useState("");
 
+  // Dynamic options state
+  const [departmentOptions, setDepartmentOptions] = useState([]);
+  const [locationOptions, setLocationOptions] = useState([]);
+  const [batchOptions, setBatchOptions] = useState([]);
+  const [arrearsOptions, setArrearsOptions] = useState([]);
+  const [notificationOptions, setNotificationOptions] = useState([]);
+  const [perkOptions, setPerkOptions] = useState([]);
+  const [questionTypes, setQuestionTypes] = useState([]);
+  const [roundModes, setRoundModes] = useState([]);
+
+  // Fetch dynamic options from backend
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        // Fetch departments
+        const deptResponse = await API.get("api/students/departments/", null, token);
+        if (Array.isArray(deptResponse)) {
+          setDepartmentOptions(deptResponse);
+        }
+
+        // Fetch other options - you can add API endpoints for these
+        // For now, setting default values
+        setLocationOptions(["On-campus", "Off-campus", "Virtual"]);
+        setBatchOptions(["2024", "2025", "2026", "2027"]);
+        setArrearsOptions(["Not Allowed", "Allowed (up to 2)", "Conditional"]);
+        setNotificationOptions(["Email & SMS", "Email Only", "SMS Only", "None"]);
+        setPerkOptions(["Food", "Transport", "Medical Insurance", "Work From Home", "Gym Membership", "Performance Bonus"]);
+        setQuestionTypes(["Text Answer", "Yes/No", "Multiple Choice"]);
+        setRoundModes(["Online", "Offline"]);
+
+      } catch (error) {
+        console.error("Error fetching options:", error);
+        // Set fallback values
+        setDepartmentOptions(["CSE", "ECE", "MECH", "CIVIL", "EEE"]);
+        setLocationOptions(["On-campus", "Off-campus", "Virtual"]);
+        setBatchOptions(["2024", "2025", "2026"]);
+        setArrearsOptions(["Not Allowed", "Allowed (up to 2)", "Conditional"]);
+        setNotificationOptions(["Email & SMS", "Email Only", "SMS Only", "None"]);
+        setPerkOptions(["Food", "Transport", "Medical Insurance", "Work From Home", "Gym Membership", "Performance Bonus"]);
+        setQuestionTypes(["Text Answer", "Yes/No", "Multiple Choice"]);
+        setRoundModes(["Online", "Offline"]);
+      }
+    };
+
+    fetchOptions();
+  }, []);
+
   const updateField = (field, value) => {
     setDriveData((prev) => ({ ...prev, [field]: value }));
   };
@@ -484,7 +502,7 @@ export default function PlacementCreateDrive() {
   const addQuestion = () => {
     setDriveData((prev) => ({
       ...prev,
-      questions: [...prev.questions, { id: Date.now(), text: "", type: questionTypes[0] }],
+      questions: [...prev.questions, { id: Date.now(), text: "", type: questionTypes[0] || "Text Answer" }],
     }));
   };
 
@@ -499,14 +517,14 @@ export default function PlacementCreateDrive() {
   const removeQuestion = (index) => {
     setDriveData((prev) => {
       const questions = prev.questions.filter((_, idx) => idx !== index);
-      return { ...prev, questions: questions.length ? questions : [{ id: Date.now(), text: "", type: questionTypes[0] }] };
+      return { ...prev, questions: questions.length ? questions : [{ id: Date.now(), text: "", type: questionTypes[0] || "Text Answer" }] };
     });
   };
 
   const addRound = () => {
     setDriveData((prev) => ({
       ...prev,
-      rounds: [...prev.rounds, { id: Date.now(), title: "", mode: roundModes[0], date: "", time: "", desc: "" }],
+      rounds: [...prev.rounds, { id: Date.now(), title: "", mode: roundModes[0] || "Online", date: "", time: "", desc: "" }],
     }));
   };
 
@@ -557,29 +575,7 @@ export default function PlacementCreateDrive() {
     return formData;
   };
 
-  const filterEligibleStudents = () => {
-    return mockStudents.filter((student) => {
-      if (driveData.departments.length > 0 && !driveData.departments.includes(student.branch)) {
-        return false;
-      }
-      if (driveData.eligibility.cgpa && parseFloat(student.cgpa) < parseFloat(driveData.eligibility.cgpa)) {
-        return false;
-      }
-      if (driveData.eligibility.tenth && student.tenthPercent < Number(driveData.eligibility.tenth)) {
-        return false;
-      }
-      if (driveData.eligibility.twelfth && student.twelfthPercent < Number(driveData.eligibility.twelfth)) {
-        return false;
-      }
-      if (driveData.eligibility.arrears === "Not Allowed" && student.arrearsCount > 0) {
-        return false;
-      }
-      if (driveData.eligibility.arrears === "Allowed (up to 2)" && student.arrearsCount > 2) {
-        return false;
-      }
-      return true;
-    });
-  };
+
 
   const handleCreateDrive = async () => {
     if (!driveData.company || !driveData.jobRole) {
